@@ -1,0 +1,291 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Main Section for Project Details -->
+<main id="main" class="main">
+  <section class="section">
+    <div class="col-12">
+      <div class="card bg-light">
+        <h2 class="text-center p-2 m-2">Chamber List</h2>
+
+        <!-- Chamber Table -->
+        <div id="doctorTableContainer" class="table-responsive">
+          <table id="doctorTable" class="table table-bordered table-striped">
+            <thead>
+              <tr class="text-center">
+                <th>Doctor ID</th>
+                <th>Doctor Name</th>
+                <th>Speciality</th>
+                <th>Professional Degree</th>
+                <th>Approval</th>
+                <th>Cr By</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in enriched_chambers %}
+              {% with chamber=row.chamber doctor=row.doctor %}
+              <tr class="text-center text-nowrap align-middle" id="row-{{ chamber.drchildid }}">
+                <td>{{ chamber.drchildid }}</td>
+                <td>{{ doctor.Title }} {{ doctor.DoctorName1 }} {{ doctor.DoctorName2 }}</td>
+                <td>{{ row.specialitydescription }}</td>
+                <td>{{ doctor.ProfessionalDegrees }}</td>
+                <td class="approval-status">
+                  {% if chamber.approvalstatus == 0 %}
+                  <span class="badge bg-warning text-dark">Waiting For Admin</span>
+                  {% elif chamber.approvalstatus == 1 %}
+                  <span class="badge bg-success">Approved</span>
+                  {% else %}
+                  <span class="badge bg-warning text-dark">Waiting For Admin</span>
+                  {% endif %}
+                </td>
+                <td>{{ chamber.crby }}</td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="ri-settings-3-line fs-6"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <button class="dropdown-item view-doctor" data-id="{{ chamber.drchildid }}">
+                          <i class="ri-eye-line me-2"></i>Details
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item approve-doctor"
+                                data-id="{{ chamber.drchildid }}"
+                                data-name="{{ doctor.DoctorName1 }} {{ doctor.DoctorName2 }}">
+                          <i class="ri-add-line me-2"></i>Approve
+                        </button>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="#">
+                          <i class="ri-edit-line me-2"></i>Edit
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% endwith %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Approve Doctor Modal -->
+<div class="modal fade" id="approveDoctorModal" tabindex="-1" aria-labelledby="approveDoctorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Doctor Approval</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="accordion" id="approveAccordion">
+
+          <!-- Accordion 1: Doctor Info -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                Doctor Information
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#approveAccordion">
+              <div class="accordion-body" id="doctorInfoContent">
+                Loading doctor details...
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 2: Doctor Data Bank -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                Doctor Data Bank
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse show" data-bs-parent="#approveAccordion">
+              <div class="accordion-body">
+
+                <!-- Checkbox Filters -->
+                <div class="mb-2">
+                  <label class="form-check-label me-2"><input type="checkbox" class="checkbox" chval="BMDCRegNo"> BMDC Reg No</label>
+<!--                  <label class="form-check-label me-2"><input type="checkbox" class="checkbox" chval="Education"> Education</label>-->
+                  <label class="form-check-label me-2"><input type="checkbox" class="checkbox" chval="DoctorName1" checked> Doctor Name</label>
+                  <label class="form-check-label me-2"><input type="checkbox" class="checkbox" chval="ProfessionalDegrees"> Professional Degree</label>
+                  <label class="form-check-label me-2"><input type="checkbox" class="checkbox" chval="Ch_Addr1"> Chamber</label>
+                  <label class="form-check-label me-2"><input type="checkbox" class="checkbox" chval="Speciality"> Specialty</label>
+                </div>
+
+                <!-- Doctor Data Bank Table -->
+                <table id="doctorDataBankTable" class="table table-bordered table-striped">
+                  <thead>
+                    <tr class="text-center">
+
+                      <th>Doctor Name</th>
+	                    <th>BMDC Reg No</th>
+<!--                      <th>Education</th>-->
+                      <th>Professional Degree</th>
+	                    <th>Specialty</th>
+                      <th>Chamber</th>
+
+
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="confirmApproveBtn">Confirm Approve</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<!--<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">-->
+<!--<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">-->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!--<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>-->
+<!--<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>-->
+<!--<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>-->
+<!--<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>-->
+<!--<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>-->
+<!--<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>-->
+
+<script>
+$(document).ready(function () {
+
+    const doctorTable = $('#doctorTable').DataTable({
+        dom: 'lrtip',
+
+        //order: [[0, 'desc']]
+    });
+
+    const doctorDataBankTable = $('#doctorDataBankTable').DataTable({
+        dom: 'lrtip',
+
+        //order: [[1, 'asc']],
+    });
+
+    let filterFields = {
+        BMDCRegNo: false,
+
+        DoctorName: true,
+        ProfessionalDegrees: false,
+        Ch_Addr1: false,
+        Speciality: false
+    };
+
+    let doctorDataRows = [];
+
+    // Checkbox change event
+    $(".checkbox").change(function () {
+        const chval = $(this).attr('chval');
+        filterFields[chval] = this.checked;
+        applyFilter();
+    });
+
+    // Load doctor data for modal
+    function loadDoctorData(doctorName) {
+        $.get(`/api/doctor_data_bank/?doctorfullname=${encodeURIComponent(doctorName)}`, function(data) {
+            doctorDataRows = data.results || data;
+            applyFilter();
+        });
+    }
+
+    function applyFilter() {
+        doctorDataBankTable.clear();
+
+        doctorDataRows.forEach(row => {
+            const fullName = `${row.doctorname1 || ''} ${row.doctorname2 || ''}`.trim();
+            let includeRow = false;
+            if (filterFields.BMDCRegNo && row.bmdcregno) includeRow = true;
+
+            if (filterFields.DoctorName && fullName) includeRow = true; // use fullName
+            if (filterFields.ProfessionalDegrees && row.professionaldegrees) includeRow = true;
+            if (filterFields.Ch_Addr1 && row.ch_addr1) includeRow = true;
+            if (filterFields.Speciality && row.specialitydescription) includeRow = true;
+
+            if (includeRow) {
+                doctorDataBankTable.row.add([
+
+                    fullName || 'N/A', // display full name
+										row.bmdcregno || 'N/A',
+                    row.professionaldegrees || 'N/A',
+                    row.specialitydescription || 'N/A',
+                    row.ch_addr1 || 'N/A',
+
+
+                ]);
+            }
+        });
+
+        doctorDataBankTable.draw();
+    }
+
+    // Approve doctor modal
+    $(document).on('click', '.approve-doctor', function () {
+        const drchildid = $(this).data('id');
+        const doctorName = $(this).data('name');
+        $('#confirmApproveBtn').data('id', drchildid);
+
+        $('#doctorInfoContent').html("Loading...");
+        $.get(`/api/chambers/${drchildid}/`, function(response) {
+            const doctor = response.doctor || {};
+            $('#doctorInfoContent').html(`
+              <ul class="list-group">
+                <li class="list-group-item"><b>Name:</b> ${doctor.Title || ''} ${doctor.DoctorName1 || ''} ${doctor.DoctorName2 || ''}</li>
+                <li class="list-group-item"><b>Degree:</b> ${doctor.ProfessionalDegrees || 'N/A'}</li>
+                <li class="list-group-item"><b>Mobile:</b> ${doctor.MobileNo || 'N/A'}</li>
+                <li class="list-group-item"><b>Medical College:</b> ${doctor.MedicalCollege || 'N/A'}</li>
+              </ul>
+            `);
+        });
+
+        loadDoctorData(doctorName);
+        $('#approveDoctorModal').modal('show');
+    });
+
+    // Confirm Approve
+    $('#confirmApproveBtn').on('click', function () {
+        const drchildid = $(this).data('id');
+        $.ajax({
+            url: `/api/approve-doctor/${drchildid}/`,
+            type: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            success: function (response) {
+                const row = $(`#row-${drchildid}`).find('.approval-status');
+                row.html(`<span class="badge bg-success">Approved</span>`);
+                $('#approveDoctorModal').modal('hide');
+                Swal.fire("Success", response.message || "Doctor approved successfully.", "success");
+            },
+            error: function () {
+                Swal.fire("Error", "Approval failed.", "error");
+            }
+        });
+    });
+
+});
+</script>
+
+{% endblock %}
+{% include './component/footer.html' %}

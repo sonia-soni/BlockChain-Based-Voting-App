@@ -1,0 +1,35 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block content %}
+
+<main id="main" class="main">
+
+	<section class="section">
+		<div class="col-12">
+			<div class="card bg-light">
+
+				<h1 class="text-center">Access Denied!</h1>
+
+			</div>
+		</div>
+	</section>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Doctor Information creation or update are not accessible today',
+      html: 'Please try again during <b>3<sup>rd</sup></b> to <b>10<sup>th</sup></b> day of the month.',  // use html instead of text
+      confirmButtonText: 'OK'
+    }).then(() => {
+      window.location.href = "{{ redirect_url }}";  // use the context variable from your view
+    });
+  });
+</script>
+
+
+{% endblock %}
+{% include './component/footer.html' %}

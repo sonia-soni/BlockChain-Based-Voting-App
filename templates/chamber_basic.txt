@@ -1,0 +1,240 @@
+
+<!--{% extends './base.html' %}-->
+<!--{% load static %}-->
+<!--{% load custom_filters %}-->
+<!--{% block content %}-->
+
+<!--&lt;!&ndash; Main Section for Project Details &ndash;&gt;-->
+<!--<main id="main" class="main">-->
+
+<!--	<section class="section">-->
+<!--		<div class="col-12">-->
+<!--			<div class="container">-->
+<!--				<h2>Chamber Basic Information Inputs</h2>-->
+
+<!--				&lt;!&ndash; Workarea Selection &ndash;&gt;-->
+<!--				<div class="mb-3">-->
+<!--					<form id="ChamInfo" class="bg-white p-5">-->
+<!--						<div class="row g-3">-->
+<!--							<div class="d-flex justify-content-start gap-5">-->
+<!--								<p class="fw-bold " >Doctor Master ID: <span id="drmasterid">{{ doctor.DrMasterID }}</span></p>-->
+<!--								<p class="fw-bold">Doctor Name: <span>{{ doctor.Title }} {{ doctor.DoctorName1 }}{% if doctor.DoctorName2 %} {{ doctor.DoctorName2 }}{% endif %}</span></p>-->
+<!--								<p class="fw-bold"  id="visitingcardimage">{{ doctor.VisitingCard }}</p>-->
+<!--								<p class="fw-bold" >Doctor 4P ID: <span id="ppppid">{{ doctor.PPPPID }}</span></p>-->
+<!--								<p class="fw-bold" >Doctor Old ID: <span id="doctoroldid">{{ doctor.DoctorOldID }}</span></p>-->
+<!--								<p class="fw-bold" >Chamber Phone: <span id="ch_phone">{{ doctor.CellPhone1 }}</span></p>-->
+<!--								<p class="fw-bold" >Chamber Email: <span id="ch_email">{{ doctor.Email1 }}</span></p>-->
+
+
+<!--							</div>-->
+<!--							<div class="form-group col-md-6">-->
+<!--								<label class="form-label" for="specialitycode">Doctor Speciality</label>-->
+<!--								<select name="specialitycode" class="form-control border border-secondary selectpicker"-->
+<!--										data-live-search="true" id="specialitycode" data-size="5">-->
+<!--									<option value="" selected>Select Doctor Speciality</option>-->
+<!--									{% for doctor_speciality in doctor_specialities %}-->
+<!--									<option value="{{ doctor_speciality.specialitycode}}">{{ doctor_speciality.specialitydescription }}-->
+<!--									</option>-->
+<!--									{% endfor %}-->
+<!--								</select>-->
+<!--							</div>-->
+<!--							<div class="col-md-6">-->
+<!--								<label for="ch_addr1" class="form-label">Chamber Address (1st part)*</label>-->
+<!--								<input type="text" class="form-control border border-black" name="ch_addr1" id="ch_addr1"-->
+<!--									   required placeholder="Chamber Address 1">-->
+<!--							</div>-->
+
+<!--							<div class="col-md-6">-->
+<!--								<label for="ch_addr2" class="form-label">Chamber Address (2nd part)</label>-->
+<!--								<input type="text" class="form-control border border-black" name="ch_addr2" id="ch_addr2"-->
+<!--									   placeholder="Chamber Address 2">-->
+<!--							</div>-->
+
+<!--							<div class="col-md-6">-->
+<!--								<label for="rxqty" class="form-label ">Patient Per Week</label>-->
+<!--								<input type="text" class="form-control border border-black" id="rxqty" name="rxqty"-->
+<!--									   placeholder="Enter Patient Per Week">-->
+<!--							</div>-->
+
+
+<!--							<div class="form-group col-md-6">-->
+<!--								<label class="form-label" for="ch_divi">Chamber Division</label>-->
+<!--								<select name="ch_divi" id="ch_divi"-->
+<!--										class="form-control border border-secondary selectpicker"-->
+<!--										data-live-search="true" data-size="5">-->
+<!--									<option value="" selected>Select Chamber Division</option>-->
+<!--									{% for division in divisions %}-->
+<!--									<option value="{{ division.DivisionCode }}">{{ division.DivisionName }}-->
+<!--									</option>-->
+<!--									{% endfor %}-->
+<!--								</select>-->
+<!--							</div>-->
+<!--							<div class="form-group col-md-6">-->
+<!--								<label class="form-label" for="ch_dist">Chamber District</label>-->
+<!--								<select name="ch_dist" id="ch_dist"-->
+<!--										class="form-control border border-secondary selectpicker"-->
+<!--										data-live-search="true" data-size="5">-->
+<!--									<option value="" selected>Select Chamber District</option>-->
+<!--									{% for district in districts %}-->
+<!--									<option value="{{ district.DistrictCode }}">{{ district.DistrictName }}-->
+<!--									</option>-->
+<!--									{% endfor %}-->
+<!--								</select>-->
+<!--							</div>-->
+<!--							<div class="form-group col-md-6">-->
+<!--								<label class="form-label" for="ch_upazila">Chamber Upazila</label>-->
+<!--								<select name="ch_upazila" id="ch_upazila"-->
+<!--										class="form-control border border-secondary selectpicker"-->
+<!--										data-live-search="true" data-size="5">-->
+<!--									<option value="" selected>Select Chamber Upazilla</option>-->
+<!--									{% for upazilla in upazillas %}-->
+<!--									<option value="{{ upazilla.UpazillaCode }}">{{ upazilla.UpazillaName }}-->
+<!--									</option>-->
+<!--									{% endfor %}-->
+<!--								</select>-->
+<!--							</div>-->
+
+<!--							<div class="form-group col-md-6">-->
+<!--								<label class="form-label" for="ch_type">Chamber Type</label>-->
+<!--								<select name="ch_type" id="ch_type"-->
+<!--										class="form-control border border-secondary selectpicker"-->
+<!--										data-live-search="true" data-size="5" placeholder="Practice Per Week">-->
+<!--									<option value="" selected>Select Practice Per Week</option>-->
+<!--									{% for i in chamberday %}-->
+<!--									<option value="{{ i }}">{{ i }}</option>-->
+<!--									{% endfor %}-->
+<!--								</select>-->
+<!--							</div>-->
+
+<!--							&lt;!&ndash;<div class="col-md-6">&ndash;&gt;-->
+<!--							&lt;!&ndash;	<label for="fourpId" class="form-label">4P ID</label>&ndash;&gt;-->
+<!--							&lt;!&ndash;	<input type="text" class="form-control border border-black" id="fourpId">&ndash;&gt;-->
+<!--							&lt;!&ndash;</div>&ndash;&gt;-->
+
+<!--							<div class="form-group col-md-6">-->
+<!--								<label for="workarea" class="form-label">Territory Code</label>-->
+<!--								<select id="workarea" name="workarea"-->
+<!--										class="form-control  border border-secondary selectpicker"-->
+<!--										data-live-search="true" data-size="5">-->
+<!--									<option value="" selected>Select Territory Code</option>-->
+<!--									{% for workarea in workareas %}-->
+<!--									<option value="{{ workarea.sapareacode }}">{{ workarea.sapareacode }}</option>-->
+<!--									{% endfor %}-->
+<!--								</select>-->
+<!--							</div>-->
+
+<!--							<div class="form-group col-md-6">-->
+<!--								<label class="form-label" for="drclass">Doctor Class</label>-->
+<!--								<select name="drclass" id="drclass"-->
+<!--										class="form-control border border-secondary selectpicker"-->
+<!--										data-live-search="true" data-size="5">-->
+<!--									<option value="" selected>Select Doctor Class</option>-->
+<!--									{% for brandclass in brandclasses %}-->
+<!--									<option value="{{ brandclass.doctorclass }}">{{ brandclass.doctorclass }}-->
+<!--									</option>-->
+<!--									{% endfor %}-->
+<!--								</select>-->
+<!--							</div>-->
+
+<!--							<div class="col-md-6">-->
+<!--								<label for="drsl" class="form-label">Doctor Serial</label>-->
+<!--								<input type="text" class="form-control border border-black" name="drsl" id="drsl">-->
+<!--							</div>-->
+<!--						</div>-->
+
+<!--						<div class="mt-4">-->
+<!--							<button type="submit" class="btn btn-primary">Submit</button>-->
+<!--						</div>-->
+<!--					</form>-->
+<!--				</div>-->
+
+<!--				&lt;!&ndash; AJAX Table &ndash;&gt;-->
+<!--				<div id="doctorTableContainer"></div>-->
+<!--			</div>-->
+
+
+<!--		</div>-->
+<!--	</section>-->
+<!--</main>-->
+
+<!--&lt;!&ndash; Add jQuery and Bootstrap scripts &ndash;&gt;-->
+<!--<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>-->
+<!--<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker-init.js' %}"></script>-->
+<!--<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker.min.js' %}"></script>-->
+<!--<script src="{% static 'assets/js/division_district_upazila_filter.js' %}"></script>-->
+<!--&lt;!&ndash;<script>&ndash;&gt;-->
+<!--&lt;!&ndash;  document.getElementById("ChamInfo").addEventListener("submit", function(event) {&ndash;&gt;-->
+<!--&lt;!&ndash;    event.preventDefault(); // Stop form from submitting&ndash;&gt;-->
+
+<!--&lt;!&ndash;    const form = event.target;&ndash;&gt;-->
+<!--&lt;!&ndash;    const jsonObject = {};&ndash;&gt;-->
+
+<!--&lt;!&ndash;    // Select all inputs, selects, and textareas inside the form&ndash;&gt;-->
+<!--&lt;!&ndash;    const elements = form.querySelectorAll("input, select, textarea");&ndash;&gt;-->
+
+<!--&lt;!&ndash;    elements.forEach(el => {&ndash;&gt;-->
+<!--&lt;!&ndash;      const name = el.name || el.id; // Use name if available, fallback to id&ndash;&gt;-->
+<!--&lt;!&ndash;      const value = el.value;&ndash;&gt;-->
+
+<!--&lt;!&ndash;      if (name) {&ndash;&gt;-->
+<!--&lt;!&ndash;        jsonObject[name] = value;&ndash;&gt;-->
+<!--&lt;!&ndash;      }&ndash;&gt;-->
+<!--&lt;!&ndash;    });&ndash;&gt;-->
+
+<!--&lt;!&ndash;    // Include static values shown in <p> or <span>&ndash;&gt;-->
+<!--&lt;!&ndash;    const drmasterid = document.getElementById('drmasterid');&ndash;&gt;-->
+
+<!--&lt;!&ndash;    if (drmasterid) {&ndash;&gt;-->
+<!--&lt;!&ndash;      jsonObject['drmasterid'] = drmasterid.textContent.trim();&ndash;&gt;-->
+<!--&lt;!&ndash;    }&ndash;&gt;-->
+<!--&lt;!&ndash;    // Final JSON output&ndash;&gt;-->
+<!--&lt;!&ndash;    console.log("Form Data as JSON:", JSON.stringify(jsonObject, null, 2));&ndash;&gt;-->
+<!--&lt;!&ndash;  });&ndash;&gt;-->
+<!--&lt;!&ndash;</script>&ndash;&gt;-->
+<!--<script>-->
+<!--  document.getElementById("ChamInfo").addEventListener("submit", function (event) {-->
+<!--    event.preventDefault();-->
+
+<!--    const form = event.target;-->
+<!--    const jsonObject = {};-->
+
+<!--    // Collect real form fields-->
+<!--    const formElements = form.querySelectorAll("input, select, textarea");-->
+<!--    formElements.forEach(el => {-->
+<!--      const name = el.name || el.id;-->
+<!--      if (name && !name.startsWith('bs-select')) {-->
+<!--        jsonObject[name] = el.value;-->
+<!--      }-->
+<!--    });-->
+
+<!--    // Collect static display elements (like <p>, <span>, <div>) that have IDs-->
+<!--    const staticElements = form.querySelectorAll("p[id], span[id], div[id]");-->
+<!--    staticElements.forEach(el => {-->
+<!--      const id = el.id;-->
+<!--      if (id && !id.startsWith('bs-select')) {-->
+<!--        jsonObject[id] = el.textContent.trim();-->
+<!--      }-->
+<!--    });-->
+
+<!--    // ✅ Final Clean JSON-->
+<!--    console.log("Form Data as JSON:", JSON.stringify(jsonObject, null, 2));-->
+
+<!--    // Optional: AJAX POST or Fetch can go here-->
+<!--  });-->
+<!--</script>-->
+
+
+
+<!--{% endblock content %}-->
+<!--{% include './component/footer.html' %}-->
+<!--&lt;!&ndash; Workarea Selection &ndash;&gt;-->
+<!--&lt;!&ndash;				<div class="mb-3">&ndash;&gt;-->
+<!--&lt;!&ndash;					<label for="workarea">Select Territory:</label>&ndash;&gt;-->
+<!--&lt;!&ndash;					<select id="workarea" class="form-control">&ndash;&gt;-->
+<!--&lt;!&ndash;						<option value="">&#45;&#45; Select Territory &#45;&#45;</option>&ndash;&gt;-->
+<!--&lt;!&ndash;						{% for userlevel in userlevels %}&ndash;&gt;-->
+<!--&lt;!&ndash;						<option value="{{ userlevel.assignusercode }}">{{ userlevel.assignusercode }}</option>&ndash;&gt;-->
+<!--&lt;!&ndash;						{% endfor %}&ndash;&gt;-->
+<!--&lt;!&ndash;					</select>&ndash;&gt;-->
+<!--&lt;!&ndash;					<button id="fetchDoctors" class="btn btn-primary mt-2">Show Doctors</button>&ndash;&gt;-->
+<!--&lt;!&ndash;				</div>&ndash;&gt;-->

@@ -1,0 +1,158 @@
+{% include './component/header.html' %}
+{% load static %}
+
+<body>
+<aside id="sidebar" class="sidebar">
+	<ul class="sidebar-nav" id="sidebar-nav">
+
+		<!-- Dashboard -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" href="/index">
+				<i class="bi bi-grid"></i>
+				<span>Dashboard</span>
+			</a>
+		</li>
+
+		<!-- Doctor Management -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" data-bs-target="#doctor-manage-nav" data-bs-toggle="collapse" href="#">
+				<i class="bi bi-hospital"></i><span>Doctor Management</span><i class="bi bi-chevron-down ms-auto"></i>
+			</a>
+			<ul id="doctor-manage-nav" class="nav-content collapse {% if request.resolver_match.url_name in 'owndoctorlist doctorbank chamber_list' %}show{% endif %}" data-bs-parent="#sidebar-nav">
+				<li>
+					<a href="{% url 'owndoctorlist' %}" class="{% if request.resolver_match.url_name == 'owndoctorlist' %}active{% endif %}">
+						<i class="bi bi-person-vcard fs-4"></i><span>My Doctor List</span>
+					</a>
+				</li>
+				<li>
+					<a href="{% url 'doctorbank' %}" class="{% if request.resolver_match.url_name == 'doctorbank' %}active{% endif %}">
+						<i class="ri-health-book-fill fs-4"></i><span>Doctor Data Bank</span>
+					</a>
+				</li>
+				<li>
+					<a href="{% url 'chamber_list' %}" class="{% if request.resolver_match.url_name == 'chamber_list' %}active{% endif %}">
+						<i class="ri-folder-unknow-line fs-4"></i><span>Non-Approved List</span>
+					</a>
+				</li>
+			</ul>
+		</li>
+
+		<!-- New Doctor -->
+		{% if can_see_new_doctor or can_see_all %}
+		<li class="nav-item">
+			<a class="nav-link collapsed" data-bs-target="#new-doctor-nav" data-bs-toggle="collapse" href="#">
+				<i class="ri-hospital-fill"></i><span>New Doctor</span><i class="bi bi-chevron-down ms-auto"></i>
+			</a>
+			<ul id="new-doctor-nav" class="nav-content collapse {% if request.resolver_match.url_name in 'doctor_list doctor_form chamber_list' %}show{% endif %}" data-bs-parent="#sidebar-nav">
+				<li>
+					<a href="{% url 'doctor_form' %}" class="{% if request.resolver_match.url_name == 'doctor_form' %}active{% endif %}">
+						<i class="ri-stethoscope-line fs-4"></i><span>New Doctor</span>
+					</a>
+				</li>
+				<li>
+					<a href="{% url 'doctor_list' %}" class="{% if request.resolver_match.url_name == 'doctor_list' %}active{% endif %}">
+						<i class="ri-list-view fs-4"></i><span>Add New Chamber</span>
+					</a>
+				</li>
+				<li>
+					<a href="{% url 'chamber_list' %}" class="{% if request.resolver_match.url_name == 'chamber_list' %}active{% endif %}">
+						<i class="ri-health-book-line fs-4"></i><span>Chamber List</span>
+					</a>
+				</li>
+			</ul>
+		</li>
+		{% elif designation_id in "2,3" %}
+		<li class="nav-item">
+			<a class="nav-link disabled text-muted" href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Available only between day {{ activation_day }} and {{ deactivation_day }}">
+<!--			<a class="nav-link disabled text-muted"-->
+<!--			   href="#"-->
+<!--			   data-bs-toggle="tooltip"-->
+<!--			   data-bs-placement="right"-->
+<!--			   title="Available only between day {{ activation_day }} and {{ deactivation_day }}">-->
+				<i class="ri-hospital-fill"></i><span>New Doctor</span>
+			</a>
+		</li>
+		{% endif %}
+
+		<!-- Market Mapping -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" data-bs-target="#market-mapping-nav" data-bs-toggle="collapse" href="#">
+				<i class="ri-dossier-line"></i><span>Update Market Mapping</span><i class="bi bi-chevron-down ms-auto"></i>
+			</a>
+			<ul id="market-mapping-nav" class="nav-content collapse {% if request.resolver_match.url_name in 'market_mapping' %}show{% endif %}" data-bs-parent="#sidebar-nav">
+				<li>
+					<a href="{% url 'market_mapping' %}" class="{% if request.resolver_match.url_name == 'market_mapping' %}active{% endif %}">
+						<i class="ri-first-aid-kit-line fs-4"></i><span>Market Mapping</span>
+					</a>
+				</li>
+			</ul>
+		</li>
+	</ul>
+</aside>
+
+{% block content %}{% endblock %}
+
+
+<!-- Vendor JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'assets/vendor/popper/popper.min.js' %}"></script>
+
+<!-- Other Vendor -->
+<script src="{% static 'assets/vendor/fontawesome/js/fontawesome.js' %}"></script>
+<script src="{% static 'assets/vendor/fontawesome/js/solid.js' %}"></script>
+<script src="{% static 'assets/vendor/fontawesome/js/brands.js' %}"></script>
+<script src="{% static 'assets/vendor/apexcharts/apexcharts.min.js' %}"></script>
+<script src="{% static 'assets/vendor/chart.js/chart.umd.js' %}"></script>
+<script src="{% static 'assets/vendor/echarts/echarts.min.js' %}"></script>
+<script src="{% static 'assets/vendor/quill/quill.js' %}"></script>
+
+<!-- DataTables Core + Bootstrap 5 -->
+<!-- DataTables core -->
+<script src="{% static 'assets/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/vendor/datatables/js/dataTables.bootstrap5.min.js' %}"></script>
+
+<!-- DataTables extensions -->
+<script src="{% static 'assets/vendor/datatables/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/vendor/datatables/js/buttons.bootstrap5.min.js' %}"></script>
+<script src="{% static 'assets/vendor/ajax/jszip.min.js' %}"></script>
+<script src="{% static 'assets/vendor/ajax/pdfmake.min.js' %}"></script>
+<script src="{% static 'assets/vendor/ajax/vfs_fonts.js' %}"></script>
+<script src="{% static 'assets/vendor/datatables/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'assets/vendor/datatables/js/buttons.print.min.js' %}"></script>
+
+<!-- Responsive extension (MUST load in this order) -->
+<script src="{% static 'assets/vendor/datatables/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'assets/vendor/datatables/js/responsive.bootstrap5.min.js' %}"></script>
+
+
+
+<script src="{% static 'assets/vendor/tinymce/tinymce.min.js' %}"></script>
+<script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker-init.js' %}"></script>
+<script src="{% static 'assets/vendor/bootstrap_select_AJAX/bootstrap-select.min.js' %}"></script>
+<script src="{% static 'assets/vendor/sweet_alert/sweetalert2@11.js' %}"></script>
+
+<!-- Main JS -->
+<script src="{% static 'assets/js/main.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("Tooltip init running...");
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        console.log("Tooltip element:", el);  // Debug log
+        new bootstrap.Tooltip(el);
+    });
+});
+</script>
+<!-- Tooltip Init -->
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+			new bootstrap.Tooltip(el);
+		});
+	});
+</script>
+
+{% include './component/footer.html' %}

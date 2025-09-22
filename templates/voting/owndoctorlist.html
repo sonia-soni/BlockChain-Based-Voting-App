@@ -1,0 +1,266 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Main Section for Project Details -->
+<main id="main" class="main">
+
+	<section class="section">
+		<div class="col-12">
+			<div class="card bg-light">
+				<!-- RM Dropdown for ZM and higher -->
+				<div class="row mb-1 px-1">
+					<!-- RM for ZM users -->
+					<div class="form-group col-md-6" id="rm-div" style="display:none;">
+						<label for="rm" class="form-label">Region (RM)</label>
+						<select id="rm" name="rm"
+						        class="form-control border border-secondary selectpicker"
+						        data-live-search="true" data-size="5"
+						        title="Select RM">
+						</select>
+					</div>
+
+					<!-- Territory -->
+					<div class="form-group col-md-6" id="territory-div" style="display:none;">
+						<label for="workarea" class="form-label">Territory Code</label>
+						<select id="workarea" name="workarea"
+						        class="form-control border border-secondary selectpicker"
+						        data-live-search="true" data-size="5"
+						        title="Select Territory Code">
+						</select>
+					</div>
+
+
+				</div>
+
+				<!-- Loading indicator -->
+				<div id="loadingIndicator" class="text-center my-4" style="display: none;">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+					<p class="mt-2">Loading Camber Data...</p>
+				</div>
+
+				<div class="card  mt-2 p-3 table-responsive">
+
+					<!-- AJAX Table -->
+					<!-- Doctors DataTable -->
+
+
+					<table id="doctorsTable" class="table  table-striped table-bordered datatable" style="width:100%">
+						<thead style='font-size:15px!important;' class="text-center">
+						<tr>
+							<th style="width:200px!important">Doctor ID</th>
+							<th>Doctor Name</th>
+							<th>Degree</th>
+							<th>Speciality</th>
+							<th>Class</th>
+							<th>Address</th>
+							<th>Action</th>
+						</tr>
+						</thead>
+						<tbody style="font-size:15px!important;vertical-align: middle;">
+						<!-- Filled dynamically -->
+						</tbody>
+					</table>
+
+
+				</div>
+
+			</div>
+		</div>
+	</section>
+</main>
+
+<!-- Add jQuery and Bootstrap scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+	$(function () {
+		// Safety: ensure one instance
+		$('.selectpicker').selectpicker();
+
+		const designation_id = String("{{ designation_id|default:'' }}");
+		let hierarchy = [];
+
+
+
+		// Initialize DataTable
+		const doctorsTable = $("#doctorsTable").DataTable({
+			dom: 'Bfrtip',
+			buttons: ['pageLength'],
+			responsive: true,
+			lengthMenu: [
+				[15, 25, 50, 100, -1],
+				['15 rows', '25 rows', '50 rows', '100 rows', 'Show all']
+			],
+			columns: [
+				{ data: 'doctorId', width: "130px" },
+				{ data: 'doctorName' },
+				{ data: 'degree', className: "text-center" },
+				{ data: 'speciality', className: "text-center", width: "80px"  },
+				{ data: 'drclass', className: "text-center", width: "45px"  },
+				{ data: 'address' , width: "300px" },
+				{ data: 'action', orderable: false, searchable: false }
+			],
+			data: [],
+			language: {
+				emptyTable: "No doctors found for this territory."
+			}
+		});
+	const $loading = $("#loadingIndicator");
+		// Fetch doctors by work area
+		function fetchDoctorsByWorkArea(workAreaCode) {
+			$loading.show();
+			doctorsTable.clear().draw();
+
+			$.ajax({
+				url: `/api/doctors-by-workarea/?workareat=${workAreaCode}`,
+				method: 'GET',
+				success: function (data) {
+					$loading.hide();
+
+					if (!data || data.length === 0) return;
+
+					const rows = data.map(doctor => ({
+						doctorId: `<b>Dr. Master ID:</b> ${doctor.drmasterid}<br><b>Dr. Chamber ID:</b> ${doctor.drchildid}`,
+						doctorName: `${doctor.doctorname1 || ""} ${doctor.doctorname2 || ""}`.trim(),
+						degree: doctor.professionaldegrees || "",
+						speciality: doctor.specialitydescription || "",
+						drclass: doctor.drclass || "",
+						address: doctor.ch_addr1 || "",
+						action: `<button class="btn btn-sm btn-info view-doctor" data-id="${doctor.drmasterid}">View</button>`
+					}));
+
+					doctorsTable.rows.add(rows).draw();
+				},
+				error: function (xhr, status, error) {
+					$loading.hide();
+					console.error("Error fetching doctors:", error);
+				}
+			});
+		}
+
+		// View doctor details
+		function viewDoctorDetails(doctorId) {
+			alert(`View details for doctor ID: ${doctorId}`);
+			// In real use: fetch details + open modal
+			// $('#viewDoctorModal').modal('show');
+		}
+
+		// Delegate click event for dynamic buttons inside DataTable
+		$('#doctorsTable').on('click', '.view-doctor', function() {
+			const doctorId = $(this).data('id');
+			viewDoctorDetails(doctorId);
+		});
+
+		// Utility: fill a select cleanly
+		function fillSelect($sel, items, valueKey, labelFn) {
+			try { $sel.selectpicker('destroy'); } catch (e) {}
+			$sel.empty();
+			items.forEach(it => {
+				const v = it[valueKey];
+				const label = labelFn(it);
+				$sel.append(`<option value="${v}">${label}</option>`);
+			});
+			$sel.selectpicker();
+		}
+
+		// Load hierarchy
+		$.get("/api/hierarchy/", function (data) {
+			hierarchy = data || [];
+
+			if (designation_id === "2") {
+				// RM -> show just Territory
+				$("#territory-div").show();
+				fillSelect($("#workarea"), hierarchy, "sapareacode",
+					it => `${it.sapareacode} - ${it.areaname}`);
+
+				$("#workarea").off("changed.bs.select").on("changed.bs.select", function() {
+					const selectedTerritory = $(this).val();
+					if (selectedTerritory) {
+						fetchDoctorsByWorkArea(selectedTerritory);
+					}
+				});
+			}
+
+			if (designation_id === "7") {
+				// MIO -> show just Territory
+				$("#territory-div").show();
+				fillSelect($("#workarea"), hierarchy, "sapareacode",
+					it => `${it.sapareacode} - ${it.areaname}`);
+
+				$("#workarea").off("changed.bs.select").on("changed.bs.select", function() {
+					const selectedTerritory = $(this).val();
+					if (selectedTerritory) {
+						fetchDoctorsByWorkArea(selectedTerritory);
+					}
+				});
+			}
+
+			if (designation_id === "3") {
+				// ZM -> show RM + Territory
+				$("#rm-div, #territory-div").show();
+
+				// Unique RM list
+				const seen = new Set();
+				const regions = [];
+				hierarchy.forEach(it => {
+					if (!seen.has(it.sapregioncode)) {
+						seen.add(it.sapregioncode);
+						regions.push({ sapregioncode: it.sapregioncode, regionname: it.regionname });
+					}
+				});
+
+				fillSelect($("#rm"), regions, "sapregioncode",
+					it => `${it.sapregioncode} - ${it.regionname}`);
+
+				$("#rm").off("changed.bs.select").on("changed.bs.select", function () {
+					const selectedRegion = $(this).val();
+					const terrs = hierarchy.filter(it => it.sapregioncode === selectedRegion);
+					fillSelect($("#workarea"), terrs, "sapareacode",
+						it => `${it.sapareacode} - ${it.areaname}`);
+
+					// Clear doctors table when region changes
+					doctorsTable.clear().draw();
+				});
+
+				$("#workarea").off("changed.bs.select").on("changed.bs.select", function() {
+					const selectedTerritory = $(this).val();
+					if (selectedTerritory) {
+						fetchDoctorsByWorkArea(selectedTerritory);
+					}
+				});
+			}
+		})
+		.fail(function (xhr) {
+			console.error("Hierarchy load failed:", xhr.responseText || xhr.status);
+		});
+	});
+</script>
+
+
+<!-- View Doctor Modal -->
+<div class="modal fade" id="viewDoctorModal" tabindex="-1" aria-labelledby="viewDoctorModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title text-center" id="viewDoctorModalLabel">Doctor Details</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<!-- Doctor details will be loaded here -->
+				<div id="doctorDetailsContent">
+					Loading...
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+{% endblock %}
+{% include './component/footer.html' %}

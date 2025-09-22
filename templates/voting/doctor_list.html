@@ -1,0 +1,208 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Main Section for Project Details -->
+<main id="main" class="main">
+
+  <section class="section">
+    <div class="col-12">
+      <div class="card bg-light">
+        <h2 class="text-center p-2 m-2">Doctors List</h2>
+
+        <!-- AJAX Table -->
+        <div id="doctorTableContainer">
+          <table id="doctorTable" class="table table-bordered table-striped text-center">
+            <thead>
+              <tr>
+                <th>Doctor ID</th>
+                <th>Doctor Name</th>
+                <th>Professional Degree</th>
+                <th>Education</th>
+                <th>Status</th>
+                <th>CrBy</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doctor in doctors %}
+              <tr class="text-center text-nowrap align-middle">
+                <td>{{ doctor.DrMasterID }}</td>
+                <td>{{ doctor.Title }} {{ doctor.DoctorName1 }}</td>
+                <td>{{ doctor.ProfessionalDegrees }}</td>
+                <td>{{ doctor.MedicalCollege }}</td>
+                <td>
+                  {% if doctor.Approval == 0 %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                  {% elif doctor.Approval == 1 %}
+                  <span class="badge bg-success">Approved</span>
+                  {% else %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                  {% endif %}
+                </td>
+                <td>{{ doctor.CrBy }}</td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="ri-settings-3-line fs-6"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a class="dropdown-item" href="{% url 'chamber_add' DrMasterID=doctor.DrMasterID %}">
+                          <i class="ri-add-line me-2"></i>Add Chamber
+                        </a>
+                      </li>
+                      <li>
+                        <button class="dropdown-item view-doctor" data-id="{{ doctor.DrMasterID }}">
+                          <i class="ri-eye-line me-2"></i>View
+                        </button>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="{% url 'doctor_edit' pk=doctor.DrMasterID %}">
+                          <i class="ri-edit-line me-2"></i>Edit
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- View Doctor Modal -->
+<div class="modal fade" id="viewDoctorModal" tabindex="-1" aria-labelledby="viewDoctorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-center" id="viewDoctorModalLabel">Doctor Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="doctorDetailsContent">Loading...</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+  // Initialize DataTable without buttons
+  $('#doctorTable').DataTable({
+    paging: true,
+    searching: true,
+    ordering: true,
+    order: [[0, 'asc']], // order by Doctor ID descending
+    lengthChange: true,
+    info: true
+  });
+
+  // View Doctor Modal
+  $('.view-doctor').on('click', function(e) {
+    e.preventDefault();
+    const doctorId = $(this).data('id');
+
+    $('#doctorDetailsContent').html('Loading...');
+    const modal = new bootstrap.Modal(document.getElementById('viewDoctorModal'));
+    modal.show();
+
+    $.ajax({
+      url: `/api/doctors/${doctorId}/`,
+      method: 'GET',
+      success: function(data) {
+        data.DoctorName = `${data.DoctorName1 || ''} ${data.DoctorName2 || ''}`.trim();
+
+        const groupedFields = {
+          'Personal Information': {
+            DoctorID: 'Doctor ID',
+            Title: 'Title',
+            DoctorName: 'Doctor Name',
+            Gender: 'Gender',
+            DOB: 'Date of Birth',
+            Nationality: 'Nationality',
+            Religion: 'Religion',
+            NID: 'NID',
+            PassportNo: 'Passport No',
+            PassportValidity: 'Passport Validity',
+            Caste: 'Caste',
+            CellPhone1: 'Cell Phone 1',
+            CellPhone2: 'Cell Phone 2',
+            Email1: 'Email 1',
+            Email2: 'Email 2',
+            HomeDistrict: 'Home District',
+            HomeUpazila: 'Home Upazila'
+          },
+          'Educational Information': {
+            MedicalCollege: 'Medical College'
+          },
+          'Professional Information': {
+            ProfessionalDegrees: 'Professional Degrees',
+            RankProfile: 'Rank Profile',
+            GovtServiceHolder: 'Govt. Service Holder',
+            BMDCRegNo: 'BMDC Registration No',
+            PPPPID: '4P ID'
+          },
+          'Marital & Family Information': {
+            MaritalStatus: 'Marital Status',
+            DOM: 'Date of Marriage',
+            SpouseName: 'Spouse Name',
+            SpouseDOB: 'Spouse DOB',
+            SpouseOccupation: 'Spouse Occupation',
+            IsSpouseDoctor: 'Is Spouse a Doctor',
+            SpouseDoctorID: 'Spouse Doctor ID',
+            children_info: 'No. of Children'
+          },
+          'Additional Information': {
+            Habit: 'Habit',
+            Hobby: 'Hobby',
+            AdditionalInfo: 'Additional Info',
+            Approval: 'Approval Status'
+          }
+        };
+
+        let html = '<div class="row">';
+        for (const [section, fields] of Object.entries(groupedFields)) {
+          html += `<div class="col-12 mt-3"><h5 class="border-bottom pb-1">${section}</h5></div>`;
+          for (const [key, label] of Object.entries(fields)) {
+            const value = data[key] ?? '<em>Not Provided</em>';
+            html += `<div class="col-md-6 mb-2"><strong>${label}:</strong> ${value}</div>`;
+          }
+        }
+
+        if (data.VisitingCard) {
+          html += `<div class="col-12 mt-4">
+                    <h5 class="border-bottom pb-1">Visiting Card</h5>
+                    <img src="${data.VisitingCard}" alt="Visiting Card" class="img-fluid img-thumbnail" style="max-width: 300px;">
+                  </div>`;
+        }
+
+        html += '</div>';
+        $('#doctorDetailsContent').html(html);
+      },
+      error: function() {
+        $('#doctorDetailsContent').html('<p class="text-danger">Failed to load details.</p>');
+      }
+    });
+  });
+
+});
+</script>
+
+{% endblock %}
+{% include './component/footer.html' %}

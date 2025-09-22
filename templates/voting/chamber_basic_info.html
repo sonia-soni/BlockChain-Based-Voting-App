@@ -1,0 +1,346 @@
+{% extends './base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+<main id="main" class="main">
+	<section class="section">
+		<div class="col-12">
+			<div class="container">
+				<h2>Chamber Basic Information Inputs</h2>
+
+				<!-- Chamber Form -->
+				<div class="mb-3">
+					<form id="ChamInfo" class="bg-white p-5">
+						<div class="row g-3">
+							<div class="d-flex justify-content-start gap-3">
+								<p class="fw-bold">Doctor Master ID: <span id="drmasterid">{{ doctor.DrMasterID }}</span></p>
+								<p class="fw-bold">Doctor Name: <span>{{ doctor.Title }} {{ doctor.DoctorName1 }}{% if doctor.DoctorName2 %} {{ doctor.DoctorName2 }}{% endif %}</span>
+								</p>
+								<p class="fw-bold d-none" id="visitingcardimage">{{ doctor.VisitingCard }}</p>
+
+								<p class="fw-bold d-none">Doctor Old ID: <span id="doctoroldid">{{ doctor.DoctorOldID }}</span></p>
+								<p class="fw-bold d-none">Chamber Phone: <span id="ch_phone">{{ doctor.CellPhone1 }}</span></p>
+								<p class="fw-bold d-none">Chamber Email: <span id="ch_email">{{ doctor.Email1 }}</span></p>
+							</div>
+
+							<!-- Inputs -->
+							<div class="form-group col-md-6">
+								<label for="specialitycode" class="form-label">Doctor Speciality</label>
+								<select name="specialitycode" id="specialitycode" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+									<option value="" selected>Select Doctor Speciality</option>
+									{% for doctor_speciality in doctor_specialities %}
+									<option value="{{ doctor_speciality.specialitycode }}">{{ doctor_speciality.specialitydescription }}
+									</option>
+									{% endfor %}
+								</select>
+							</div>
+
+							<div class="col-md-6">
+								<label for="ch_addr1" class="form-label">Chamber Address (1st part)*</label>
+								<input type="text" class="form-control border border-black" name="ch_addr1" id="ch_addr1" required placeholder="Chamber Address 1">
+							</div>
+
+							<div class="col-md-6">
+								<label for="ch_addr2" class="form-label">Chamber Address (2nd part)</label>
+								<input type="text" class="form-control border border-black" name="ch_addr2" id="ch_addr2" placeholder="Chamber Address 2">
+							</div>
+
+
+							<div class="form-group col-md-6">
+								<label for="ch_divi" class="form-label">Chamber Division</label>
+								<select name="ch_divi" id="ch_divi" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+									<option value="" selected>Select Chamber Division</option>
+									{% for division in divisions %}
+									<option value="{{ division.DivisionCode }}">{{ division.DivisionName }}</option>
+									{% endfor %}
+								</select>
+							</div>
+
+							<div class="form-group col-md-6">
+								<label for="ch_dist" class="form-label">Chamber District</label>
+								<select name="ch_dist" id="ch_dist" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+									<option value="" selected>Select Chamber District</option>
+									{% for district in districts %}
+									<option value="{{ district.DistrictCode }}">{{ district.DistrictName }}</option>
+									{% endfor %}
+								</select>
+							</div>
+
+							<div class="form-group col-md-6">
+								<label for="ch_upazila" class="form-label">Chamber Upazila</label>
+								<select name="ch_upazila" id="ch_upazila" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+									<option value="" selected>Select Chamber Upazila</option>
+									{% for upazilla in upazillas %}
+									<option value="{{ upazilla.UpazillaCode }}">{{ upazilla.UpazillaName }}</option>
+									{% endfor %}
+								</select>
+							</div>
+
+							<div class="form-group col-md-6">
+								<label for="ch_type" class="form-label">Chamber Type</label>
+								<select name="ch_type" id="ch_type" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+									<option value="" selected>Select Practice Per Week</option>
+									{% for i in chamberday %}
+									<option value="{{ i }}">{{ i }}</option>
+									{% endfor %}
+								</select>
+							</div>
+
+							<div class="form-group col-md-6">
+								<label for="workarea" class="form-label">Territory Code</label>
+								<select id="workarea" name="workarea" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+									<option value="" selected>Select Territory Code</option>
+									{% for workarea in workareas %}
+									<option value="{{ workarea.sapareacode }}">{{ workarea.sapareacode }}</option>
+									{% endfor %}
+								</select>
+							</div>
+
+							<div class="form-group col-md-6">
+								<label for="drclass" class="form-label">Doctor Class</label>
+								<select name="drclass" id="drclass" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+									<option value="" selected>Select Doctor Class</option>
+									{% for brandclass in brandclasses %}
+									<option value="{{ brandclass.doctorclass }}">{{ brandclass.doctorclass }}</option>
+									{% endfor %}
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label for="rxqty" class="form-label">Patient Per Week</label>
+								<input type="text" class="form-control border border-black" id="rxqty" name="rxqty" placeholder="Enter Patient Per Week">
+							</div>
+
+							<div class="col-md-6">
+								<label for="drsl" class="form-label">Doctor Serial</label>
+								<input type="text" class="form-control border border-black" name="drsl" id="drsl">
+							</div>
+							<div class="form-group col-md-6">
+								<label class="form-label" for="PPPPID">4P ID</label>
+								<input type="text" class="form-control border border-secondary" name="PPPPID" maxlength="30" id="PPPPID">
+							</div>
+						</div>
+
+						<div class="mt-4">
+							<button type="submit" class="btn btn-primary">Submit</button>
+						</div>
+					</form>
+				</div>
+
+				<div id="doctorTableContainer"></div>
+			</div>
+		</div>
+	</section>
+</main>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker-init.js' %}"></script>
+<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'assets/js/division_district_upazila_filter.js' %}"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- ✅ Add Swal -->
+<script>
+	document.getElementById("ChamInfo").addEventListener("submit", function (event) {
+			event.preventDefault();
+
+			const form = event.target;
+			const submitBtn = form.querySelector("button[type='submit']");
+			submitBtn.disabled = true;
+			submitBtn.textContent = "Submitting...";
+
+			const jsonObject = {};
+
+			// collect all inputs
+			const formElements = form.querySelectorAll("input, select, textarea");
+			formElements.forEach(el => {
+					const name = el.name || el.id;
+					if (name && !name.startsWith('bs-select')) {
+							jsonObject[name] = el.value;
+					}
+			});
+
+			// collect hidden doctor info
+			const staticElements = form.querySelectorAll("p[id], span[id], div[id]");
+			staticElements.forEach(el => {
+					const id = el.id;
+					if (id && !id.startsWith('bs-select')) {
+							jsonObject[id] = el.textContent.trim();
+					}
+			});
+
+			fetch("/api/chamber/add/", {
+					method: "POST",
+					headers: {
+							"Content-Type": "application/json",
+							"X-CSRFToken": getCookie("csrftoken")
+					},
+					body: JSON.stringify(jsonObject)
+			})
+			.then(async response => {
+					const data = await response.json();
+
+					if (response.ok) {
+							// ✅ Success Swal
+							Swal.fire({
+									title: "Success!",
+									text: "Chamber info saved successfully!",
+									icon: "success",
+									confirmButtonText: "OK"
+							}).then(() => {
+									form.reset();
+									$('.selectpicker').val('').selectpicker('refresh');
+									sessionStorage.clear();
+									window.location.href = "/chamber_list/";
+							});
+					} else {
+							// ❌ Error Swal from backend validation
+							Swal.fire({
+									title: "Error",
+									text: data.error || "Something went wrong.",
+									icon: "error",
+									confirmButtonText: "Close"
+							});
+							submitBtn.disabled = false;
+							submitBtn.textContent = "Submit";
+					}
+			})
+			.catch(error => {
+					// ❌ Network or unexpected error
+					Swal.fire({
+							title: "Submission Failed",
+							text: "Please check your internet or contact admin.",
+							icon: "error",
+							confirmButtonText: "Close"
+					});
+					console.error("Error:", error);
+					submitBtn.disabled = false;
+					submitBtn.textContent = "Submit";
+			});
+	});
+
+	function getCookie(name) {
+			let cookieValue = null;
+			if (document.cookie && document.cookie !== "") {
+					const cookies = document.cookie.split(";");
+					for (let cookie of cookies) {
+							cookie = cookie.trim();
+							if (cookie.startsWith(name + "=")) {
+									cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+									break;
+							}
+					}
+			}
+			return cookieValue;
+	}
+</script>
+
+<!--<script>-->
+<!--document.getElementById("ChamInfo").addEventListener("submit", function (event) {-->
+<!--    event.preventDefault();-->
+
+<!--    const form = event.target;-->
+<!--    const submitBtn = form.querySelector("button[type='submit']");-->
+<!--    submitBtn.disabled = true;-->
+<!--    submitBtn.textContent = "Submitting...";-->
+
+<!--    const jsonObject = {};-->
+
+<!--    const formElements = form.querySelectorAll("input, select, textarea");-->
+<!--    formElements.forEach(el => {-->
+<!--        const name = el.name || el.id;-->
+<!--        if (name && !name.startsWith('bs-select')) {-->
+<!--            jsonObject[name] = el.value;-->
+<!--        }-->
+<!--    });-->
+
+<!--    const staticElements = form.querySelectorAll("p[id], span[id], div[id]");-->
+<!--    staticElements.forEach(el => {-->
+<!--        const id = el.id;-->
+<!--        if (id && !id.startsWith('bs-select')) {-->
+<!--            jsonObject[id] = el.textContent.trim();-->
+<!--        }-->
+<!--    });-->
+
+<!--    fetch("/api/chamber/add/", {-->
+<!--        method: "POST",-->
+<!--        headers: {-->
+<!--            "Content-Type": "application/json",-->
+<!--            "X-CSRFToken": getCookie("csrftoken")-->
+<!--        },-->
+<!--        body: JSON.stringify(jsonObject)-->
+<!--    })-->
+<!--    .then(response => {-->
+<!--        if (!response.ok) throw new Error("Network response not ok");-->
+<!--        return response.json();-->
+<!--    })-->
+<!--    .then(data => {-->
+<!--    Swal.fire('Success', 'Chamber info saved successfully!', 'success').then(() => {-->
+<!--        form.reset();-->
+
+<!--        // Reset select pickers-->
+<!--        $('.selectpicker').val('').selectpicker('refresh');-->
+
+<!--        // Clear cloned row table if applicable-->
+<!--        const newRow = $('#childrenTable tbody tr:first').clone();-->
+<!--        newRow.find('input, select').val('');-->
+<!--        $('#childrenTable tbody').html(newRow);-->
+
+<!--        // Recalculate serial numbers if needed-->
+<!--        if (typeof updateSerialNumbers === 'function') {-->
+<!--            updateSerialNumbers();-->
+<!--        }-->
+
+<!--        // Clear localStorage/sessionStorage if used-->
+<!--        sessionStorage.clear();-->
+
+<!--        // Redirect-->
+<!--        window.location.href = "/chamber_list/";-->
+<!--    });-->
+<!--})-->
+
+<!--&lt;!&ndash;    .then(data => {&ndash;&gt;-->
+<!--&lt;!&ndash;        if (data.message) {&ndash;&gt;-->
+<!--&lt;!&ndash;            alert(data.message);&ndash;&gt;-->
+
+<!--&lt;!&ndash;            form.reset();&ndash;&gt;-->
+<!--&lt;!&ndash;            $('.selectpicker').selectpicker('refresh');&ndash;&gt;-->
+
+<!--&lt;!&ndash;            submitBtn.disabled = false;&ndash;&gt;-->
+<!--&lt;!&ndash;            submitBtn.textContent = "Submit";&ndash;&gt;-->
+
+<!--&lt;!&ndash;            setTimeout(() => {&ndash;&gt;-->
+<!--&lt;!&ndash;                window.location.href = "/chamber/list/";&ndash;&gt;-->
+<!--&lt;!&ndash;            }, 1500);&ndash;&gt;-->
+<!--&lt;!&ndash;        } else {&ndash;&gt;-->
+<!--&lt;!&ndash;            throw new Error("Unexpected response format");&ndash;&gt;-->
+<!--&lt;!&ndash;        }&ndash;&gt;-->
+<!--&lt;!&ndash;    })&ndash;&gt;-->
+<!--    .catch(error => {-->
+<!--        alert("Submission failed. See console for error.");-->
+<!--        console.error("Error:", error);-->
+<!--        submitBtn.disabled = false;-->
+<!--        submitBtn.textContent = "Submit";-->
+<!--    });-->
+<!--});-->
+
+<!--function getCookie(name) {-->
+<!--    let cookieValue = null;-->
+<!--    if (document.cookie && document.cookie !== "") {-->
+<!--        const cookies = document.cookie.split(";");-->
+<!--        for (let cookie of cookies) {-->
+<!--            cookie = cookie.trim();-->
+<!--            if (cookie.startsWith(name + "=")) {-->
+<!--                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));-->
+<!--                break;-->
+<!--            }-->
+<!--        }-->
+<!--    }-->
+<!--    return cookieValue;-->
+<!--}-->
+<!--</script>-->
+
+
+{% endblock content %}
+{% include './component/footer.html' %}

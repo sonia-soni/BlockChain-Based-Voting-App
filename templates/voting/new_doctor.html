@@ -1,0 +1,646 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block content %}
+<main id="main" class="main">
+	<section class="section ">
+		<div class="col-12 ">
+			<div class="">
+				<div class="wizard border border-secondary">
+					<ul class="nav nav-tabs ">
+						<li class="nav-item"><a class="nav-link active" href="#step1" data-toggle="tab">Basic
+							Information</a></li>
+						<li class="nav-item"><a class="nav-link" href="#step2" data-toggle="tab">Professional
+							Information</a></li>
+						<li class="nav-item"><a class="nav-link" href="#step3" data-toggle="tab">Contact Information</a>
+						</li>
+						<li class="nav-item"><a class="nav-link" href="#step4" data-toggle="tab">Family Information</a>
+						</li>
+						<li class="nav-item"><a class="nav-link" href="#complete" data-toggle="tab">Complete</a></li>
+					</ul>
+
+					<form id="doctorForm" method="post" enctype="multipart/form-data" novalidate>
+						{% csrf_token %}
+						<div class="tab-content">
+							<!-- Step 1: Personal Information -->
+							<div class="tab-pane fade show active" id="step1">
+								<div class="row">
+									<h4>Personal Information</h4>
+									<div class="form-group col-md-6">
+										<label for="DoctorName1" class="form-label">Doctor Name 1</label>
+										<div class="input-group mb-2">
+											<div class="input-group-prepend">
+												<div class="input-group-text border border-secondary">Dr.</div>
+											</div>
+											<input type="text" class="form-control border border-secondary" id="DoctorName1" name="DoctorName1" minlength="10" maxlength="40">
+										</div>
+
+									</div>
+									<div class="form-group col-md-6">
+										<label for="DoctorName2" class="form-label">Doctor Name 2</label>
+										<input type="text" class="form-control border border-secondary" id="DoctorName2" name="DoctorName2" maxlength="30">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="DOB">Date of Birth</label>
+										<div class="input-group">
+											<input type="text" class="form-control border border-secondary datepicker-input" id="DOB" name="DOB" placeholder="Select Date">
+											<span class="input-group-text calendar-icon border border-secondary">
+												<i class="bi bi-calendar"></i>
+											</span>
+										</div>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="NID">NID</label>
+										<input type="text" class="form-control border border-secondary" name="NID" id="NID" minlength="13" maxlength="18">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Nationality">Nationality</label>
+										<select name="Nationality" id="Nationality" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+											<option value="" selected>Select Nationality</option>
+											{% for nationality in nationalities %}
+											<option value="{{ nationality.id }}">{{ nationality.Nationality }}
+											</option>
+											{% endfor %}
+										</select>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="PassportNo">Passport No</label>
+										<input type="text" class="form-control border border-secondary" name="PassportNo" id="PassportNo" minlength="6" maxlength="15">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="PassportValidity">Passport Validity</label>
+										<div class="input-group">
+											<input type="text" class="form-control border border-secondary datepicker-input" id="PassportValidity" name="PassportValidity" placeholder="Select Date">
+											<span class="input-group-text calendar-icon border border-secondary">
+                        <i class="bi bi-calendar"></i>
+											</span>
+										</div>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Gender">Gender</label>
+										<select class="form-control border border-secondary" name="Gender" id="Gender">
+											<option value="" selected>Select Gender</option>
+											{% for gender in genders %}
+											<option value="{{ gender.id }}">{{ gender.gender }}
+											</option>
+											{% endfor %}
+										</select>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Religion">Religion</label>
+										<select class="form-control border border-secondary" name="Religion" id="Religion">
+											<option value="" selected>Select Religion</option>
+											{% for religion in religions %}
+											<option value="{{ religion.id }}">{{ religion.religion_name }}
+											</option>
+											{% endfor %}
+										</select>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="caste">Caste</label>
+										<input type="text" class="form-control border border-secondary" id="caste" name="caste" maxlength="20">
+									</div>
+
+									<div class="p-3">
+										<button type="button" class="btn btn-primary next-step ">Next</button>
+									</div>
+								</div>
+							</div>
+
+							<!-- Step 2: Professional Details -->
+							<div class="tab-pane fade" id="step2">
+								<div class="row">
+									<h4>Professional Details</h4>
+
+									<div class="form-group col-md-6">
+										<label class="form-label" for="RankProfile">Rank Profile</label>
+										<select name="RankProfile" id="RankProfile" class="form-control border border-secondary selectpicker" data-live-search="true">
+											<option value="" selected>Select Rank</option>
+											{% for rank in ranks %}
+											<option value="{{ rank.id }}">{{ rank.RankName }}</option>
+											{% endfor %}
+										</select>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="BMDCRegNo">BMDC Registration No</label>
+										<input type="text" class="form-control border border-secondary" name="BMDCRegNo" maxlength="30" id="BMDCRegNo">
+									</div>
+
+									<div class="form-group col-md-6">
+										<label class="form-label" for="MedicalCollege">Education</label>
+										<select name="MedicalCollege" class="form-control border border-secondary selectpicker d" data-live-search="true" id="MedicalCollege">
+											<option value="" selected>Select Medical Institute</option>
+											{% for college in colleges %}
+											<option value="{{ college.id}}">{{ college.Institution_Name }}
+											</option>
+											{% endfor %}
+										</select>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="ProfessionalDegrees">Professional Degree</label>
+										<select name="ProfessionalDegrees" class="form-control border border-secondary selectpicker" data-live-search="true" id="ProfessionalDegrees">
+											<option value="" selected>Select Professional Degree</option>
+											{% for degree in degrees %}
+											<option value="{{ degree.id }}">{{ degree.Degree_Name }}</option>
+											{% endfor %}
+										</select>
+									</div>
+
+
+									<div class="form-group col-md-6">
+										<label class="form-label" for="GovtServiceHolder">Govt. Service Holder</label>
+										<select name="GovtServiceHolder" class="form-control border border-secondary d" id="GovtServiceHolder">
+											<option value="" selected>Select Govt. Service</option>
+											<option value="1">Yes</option>
+											<option value="0">No</option>
+										</select>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="DoctorOldID">Doctor Old ID</label>
+										<input type="text" class="form-control border border-secondary" name="DoctorOldID" maxlength="30" id="DoctorOldID">
+									</div>
+
+									<!--									<div class="form-group col-md-6">-->
+									<!--										<label class="form-label" for="PPPPID">4P ID</label>-->
+									<!--										<input type="text" class="form-control border border-secondary" name="PPPPID" maxlength="8" id="PPPPID">-->
+									<!--									</div>-->
+									<div class="p-3">
+										<button type="button" class="btn btn-secondary prev-step">Previous</button>
+										<button type="button" class="btn btn-primary next-step">Next</button>
+									</div>
+								</div>
+							</div>
+
+							<!-- Step 3: Contact & Additional Info -->
+							<div class="tab-pane fade" id="step3">
+								<div class="row">
+									<h4>Contact & Additional Info</h4>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="CellPhone1">Cell Phone 1</label>
+										<input type="text" class="form-control border border-secondary" name="CellPhone1" id="CellPhone1">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="CellPhone2">Cell Phone 2</label>
+										<input type="text" class="form-control border border-secondary" name="CellPhone2" id="CellPhone2">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Email1">Email 1</label>
+										<input type="email" class="form-control border border-secondary" name="Email1" id="Email1">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Email2">Email 2</label>
+										<input type="email" class="form-control border border-secondary" name="Email2" id="Email2">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="HomeDistrict">Home District</label>
+										<select
+												name="HomeDistrict"
+												id="HomeDistrict"
+												class="form-control border border-secondary selectpicker"
+												data-live-search="true"
+												data-size="5"
+										>
+											<option value="" selected>Select Home District</option>
+											{% for district in districts %}
+											<option value="{{ district.DistrictCode }}">{{ district.DistrictName }}</option>
+											{% endfor %}
+										</select>
+									</div>
+
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Upazilla">Upazilla</label>
+										<select name="HomeUpazila" class="form-control border border-secondary selectpicker" data-live-search="true" id="Upazilla">
+											<option value="" selected>Select Upazzila</option>
+										</select>
+									</div>
+
+									<div class="p-3">
+										<button type="button" class="btn btn-secondary prev-step">Previous</button>
+										<button type="button" class="btn btn-primary next-step">Next</button>
+									</div>
+								</div>
+
+							</div>
+
+							<!-- Step 4: Family Information -->
+							<div class="tab-pane fade" id="step4">
+								<div class="row">
+									<h4>Family & Additional Information</h4>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Habit">Habit</label>
+										<input type="text" class="form-control border border-secondary" name="Habit" id="Habit">
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="Hobby">Hobby</label>
+										<input type="text" class="form-control border border-secondary" name="Hobby" id="Hobby">
+									</div>
+									<div class="form-group col-md-6">
+										<label for="MaritalStatus" class="form-label">Marital Status</label>
+										<select name="MaritalStatus" class="form-control border border-secondary" id="MaritalStatus">
+											<option value="" selected>Select Marital Status</option>
+											{% for marital_status in marital_statuses %}
+											<option value="{{ marital_status.id }}">{{ marital_status.marriage_status }}</option>
+											{% endfor %}
+										</select>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="DOM">Date of Marriage</label>
+										<div class="input-group">
+											<input type="text" class="form-control border border-secondary datepicker-input" id="DOM" name="DOM" placeholder="Select Date">
+											<span class="input-group-text calendar-icon border border-secondary">
+                       <i class="bi bi-calendar"></i>
+											</span>
+										</div>
+									</div>
+									<div class="form-group col-md-6">
+										<label class="form-label" for="SpouseName">Spouse Name</label>
+										<input type="text" class="form-control border border-secondary" name="SpouseName" id="SpouseName">
+									</div>
+									<div class="form-group col-md-6">
+										<label for="SpouseDOB">Spouse Date of Birth</label>
+										<div class="input-group">
+											<input type="text" class="form-control border border-secondary datepicker-input" id="SpouseDOB" name="SpouseDOB" placeholder="Select Date">
+											<span class="input-group-text calendar-icon border border-secondary">
+                       <i class="bi bi-calendar"></i>
+											</span>
+										</div>
+									</div>
+
+									<div class="form-group col-md-6">
+										<label for="SpouseOccupation">Spouse Occupation</label>
+										<input type="text" class="form-control border border-secondary" name="SpouseOccupation" id="SpouseOccupation">
+									</div>
+
+									<div class="form-group col-md-6">
+										<label>Is Spouse Doctor</label><br>
+										<div class="form-check form-check-inline">
+											<input class="form-check-input" type="radio" name="IsSpouseDoctor" id="spouseDoctorYes" value="True">
+											<label class="form-check-label" for="spouseDoctorYes">Yes</label>
+										</div>
+										<div class="form-check form-check-inline">
+											<input class="form-check-input" type="radio" name="IsSpouseDoctor" id="spouseDoctorNo" value="False">
+											<label class="form-check-label" for="spouseDoctorNo">No</label>
+										</div>
+									</div>
+
+									<div class="form-group col-md-6" id="spouseDoctorIDField" style="display: none;">
+										<label for="SpouseDoctorID">Spouse Doctor ID</label>
+										<input type="text" class="form-control border border-secondary" name="SpouseDoctorID" id="SpouseDoctorID">
+									</div>
+									<div class=" col-12" id="">
+										<label>Children Information</label>
+										<table class="table table-bordered table-responsive border-dark" id="childrenTable">
+											<thead>
+											<tr>
+												<th>SL</th>
+												<th>Name</th>
+												<th>Age</th>
+												<th>Date of Birth</th>
+												<th>Gender</th>
+												<th>Education</th>
+												<th></th>
+											</tr>
+											</thead>
+											<tbody>
+											<tr>
+												<td class="serial">1</td>
+												<td>
+													<label style="display:none">Child Name</label>
+													<input type="text" class="form-control" placeholder="child_name" name="child_name">
+												</td>
+												<td>
+													<label style="display:none">Child Age</label>
+													<input type="text" class="form-control" placeholder="Age" name="child_age">
+												</td>
+												<td>
+													<div class="input-group">
+														<label style="display:none">Child Date of Birth</label>
+														<input type="text" class="form-control border border-secondary datepicker-input" name="child_dob" placeholder="Select Date">
+														<span class="input-group-text calendar-icon border border-secondary">
+															<i class="bi bi-calendar"></i>
+														</span>
+													</div>
+												</td>
+												<td>
+													<div class="form-group">
+														<label style="display:none">Child Gender</label>
+														<select class="form-control border border-secondary dropdown" name="child_gender" id="child_gender">
+															<option value="" selected>Select Gender</option>
+															{% for gender in genders %}
+															<option value="{{ gender.id }}">{{ gender.gender }}
+															</option>
+															{% endfor %}
+														</select>
+													</div>
+												</td>
+												<td>
+													<label style="display:none">Child Education</label>
+													<input type="text" class="form-control" placeholder="Education" name="child_education">
+												</td>
+												<td class="table-controls table-zapper">
+													<button class="btnDeleteRow btn-zap" type="button">&times;</button>
+												</td>
+
+											</tr>
+
+											</tbody>
+
+											<tfoot>
+											<tr>
+												<td colspan="7">
+													<button type="button" class="btnAddRow btn btn-primary btn-sm align-items-centre justify-content-centre">
+														Add Row
+													</button>
+												</td>
+											</tr>
+											</tfoot>
+										</table>
+									</div>
+									<div id="companyField" class="form-group col-md-6">
+										<label for="company" class="form-label">Company</label>
+										<select name="company" class="form-control border border-secondary" id="company">
+											<option value="" selected>Select Company</option>
+											{% for company in companys %}
+											<option value="{{ company.CompanyName }}">{{ company.CompanyName }}</option>
+											{% endfor %}
+										</select>
+									</div>
+
+									<div class="form-group col-md-6" id="visitingcardFied">
+										<label for="VisitingCard">Visiting Card</label>
+										<input type="file" class="form-control border border-secondary" name="VisitingCard" id="VisitingCard" accept="image/*">
+									</div>
+
+
+									<div class="p-3">
+										<button type="button" class="btn btn-secondary prev-step">Previous</button>
+										<button type="button" class="btn btn-primary next-step">Next</button>
+									</div>
+								</div>
+							</div>
+							<!-- Step 5: Completion -->
+							<div class="tab-pane fade" id="complete">
+								<h4>Complete</h4>
+								<div class="form-group">
+									<div id="reviewContent" class="p-3 border rounded bg-light">
+										<!-- Filled info will be dynamically inserted here -->
+									</div>
+									<button type="button" class="btn btn-secondary prev-step">Previous</button>
+									<button type="button" class="btn btn-success" id="submitDoctorForm">Submit</button>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker-init.js' %}"></script>
+<script src="{% static 'assets/vendor/bootstrap_datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'assets/js/district_filtering.js' %}"></script>
+<script>
+	// Review Tab
+	function updateReviewContent() {
+		let reviewContent = '<h4>Review Data</h4><ul>';
+		const processedRadioNames = ['csrfmiddlewaretoken'];
+		const fileInputs = []; // NEW: Array to store file input info
+
+		// --------------------------------File Preview start--------------------------------------------
+		$('#doctorForm input:not([type="hidden"]):not([type="radio"]), #doctorForm select').each(function () {
+			const id = $(this).attr('id');
+			if (id && id.startsWith('child_')) return;
+
+			const label = $('label[for="' + id + '"]').text().trim();
+
+			if (this.type === 'file') {
+				if (this.files.length > 0) {
+					fileInputs.push({ label, file: this.files[0] });
+				}
+			} else {
+				const value = $(this).is('select') ? $(this).find('option:selected').text() : $(this).val();
+				if (value && !value.toLowerCase().startsWith('select')) {
+					reviewContent += `<li><strong>${label}:</strong> ${value}</li>`;
+				}
+			}
+		});
+
+		if (fileInputs.length > 0) {
+			const loadImagePreviews = () => {
+				let loaded = 0;
+				fileInputs.forEach(({ label, file }) => {
+					const reader = new FileReader();
+					reader.onload = function (e) {
+						reviewContent += `
+							<p><strong>${label}:</strong><br>
+							<img src="${e.target.result}" alt="${label}" style="width: 100%; max-width: 500px; height: 300px; border: 1px solid #ccc; padding: 5px;"></p>
+						`;
+						loaded++;
+						if (loaded === fileInputs.length) {
+							$('#reviewContent').html(reviewContent); // Update once all images are loaded
+						}
+					};
+					reader.readAsDataURL(file);
+				});
+			};
+			loadImagePreviews();
+		} else {
+			$('#reviewContent').html(reviewContent); // No file inputs, update immediately
+		}
+		// --------------------------------File Preview end--------------------------------------------
+
+		$('#doctorForm input[type="radio"]').each(function () {
+			const name = $(this).attr('name');
+			if (processedRadioNames.includes(name)) return;
+			processedRadioNames.push(name);
+
+			const selected = $(`input[name="${name}"]:checked`);
+			if (selected.length) {
+				const groupLabel = $(this).closest('.form-group').find('label:first').text().trim();
+				const selectedLabel = $(`label[for="${selected.attr('id')}"]`).text().trim();
+				reviewContent += `<li><strong>${groupLabel}:</strong> ${selectedLabel}</li>`;
+			}
+		});
+
+		reviewContent += '</ul><h4>Children Info</h4>';
+		$('#childrenTable tbody tr').each(function (i) {
+			const name = $(this).find('input[name="child_name"]').val();
+			const age = $(this).find('input[name="child_age"]').val();
+			const dob = $(this).find('input[name="child_dob"]').val();
+			const gender = $(this).find('select[name="religion"] option:selected').text();
+			const education = $(this).find('input[name="child_education"]').val();
+
+			if (name || age || dob || gender || education) {
+				reviewContent += `<p><strong>Child ${i + 1}:</strong><br>`;
+				if (name) reviewContent += `Name: ${name}<br>`;
+				if (age) reviewContent += `Age: ${age}<br>`;
+				if (dob) reviewContent += `DOB: ${dob}<br>`;
+				if (gender && !gender.toLowerCase().startsWith('select')) reviewContent += `Gender: ${gender}<br>`;
+				if (education) reviewContent += `Education: ${education}<br>`;
+				reviewContent += `</p>`;
+			}
+		});
+
+		$('#reviewContent').html(reviewContent);
+	}
+
+	$('.next-step').click(updateReviewContent);
+	$('#doctorForm input, #doctorForm select').on('input change', updateReviewContent);
+</script>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			const designation_id = "{{ designation_id|default:'' }}";
+			const companyField = document.getElementById("companyField");
+
+			if (designation_id !== "7") {
+					companyField.style.display = "none";
+			} else {
+					companyField.style.display = "block";
+			}
+
+			// Spouse Doctor Toggle
+			const yesRadio = document.getElementById('spouseDoctorYes');
+			const noRadio = document.getElementById('spouseDoctorNo');
+			const doctorIDField = document.getElementById('spouseDoctorIDField');
+
+			function toggleDoctorIDField() {
+					doctorIDField.style.display = yesRadio?.checked ? 'block' : 'none';
+			}
+			yesRadio?.addEventListener('change', toggleDoctorIDField);
+			noRadio?.addEventListener('change', toggleDoctorIDField);
+			toggleDoctorIDField();
+
+			// Children Table Management
+			const updateSerialNumbers = () => {
+					document.querySelectorAll('#childrenTable tbody tr').forEach((row, index) => {
+							const serialCell = row.querySelector('.serial');
+							if (serialCell) serialCell.textContent = index + 1;
+					});
+			};
+
+			document.querySelector('.btnAddRow').addEventListener('click', function () {
+					const tableBody = document.querySelector('#childrenTable tbody');
+					const firstRow = tableBody.querySelector('tr');
+					const newRow = firstRow.cloneNode(true);
+					newRow.querySelectorAll('input, select').forEach(input => input.value = '');
+					tableBody.appendChild(newRow);
+					updateSerialNumbers();
+			});
+
+			document.querySelector('#childrenTable').addEventListener('click', function (e) {
+					if (e.target && e.target.classList.contains('btnDeleteRow')) {
+							const tableBody = document.querySelector('#childrenTable tbody');
+							const allRows = tableBody.querySelectorAll('tr');
+							if (allRows.length > 1) {
+									e.target.closest('tr').remove();
+									updateSerialNumbers();
+							}
+					}
+			});
+
+			// Wizard Navigation
+			$(".next-step").click(function () {
+					let valid = true;
+					$(this).closest('.tab-pane').find("input, select").each(function () {
+							if (!this.checkValidity()) {
+									valid = false;
+									this.reportValidity();
+									return false;
+							}
+					});
+					if (valid) {
+							let nextTab = $(this).closest('.tab-pane').next('.tab-pane').attr('id');
+							$('.nav-tabs a[href="#' + nextTab + '"]').tab('show');
+					}
+			});
+
+			$(".prev-step").click(function () {
+					let prevTab = $(this).closest('.tab-pane').prev('.tab-pane').attr('id');
+					$('.nav-tabs a[href="#' + prevTab + '"]').tab('show');
+			});
+
+			// CSRF Helper
+			const getCookie = (name) => {
+					let cookieValue = null;
+					if (document.cookie && document.cookie !== '') {
+							document.cookie.split(';').forEach(cookie => {
+									const trimmed = cookie.trim();
+									if (trimmed.startsWith(name + '=')) {
+											cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+									}
+							});
+					}
+					return cookieValue;
+			};
+
+			// AJAX Submission
+			document.getElementById('submitDoctorForm')?.addEventListener('click', function (e) {
+					e.preventDefault();
+					const btn = this;
+					btn.disabled = true;
+
+					const form = document.getElementById('doctorForm');
+					const formData = new FormData(form);
+
+					// Append children
+					['child_name','child_age','child_dob','child_gender','child_education'].forEach(name => {
+							while (formData.has(name)) formData.delete(name);
+					});
+
+					const children = [];
+					$('#childrenTable tbody tr').each(function () {
+							const child = {
+									child_name: $(this).find('input[name="child_name"]').val(),
+									child_age: $(this).find('input[name="child_age"]').val(),
+									child_dob: $(this).find('input[name="child_dob"]').val(),
+									child_gender: $(this).find('select[name="child_gender"]').val(),
+									child_education: $(this).find('input[name="child_education"]').val()
+							};
+							if (Object.values(child).some(val => val && val.trim() !== '')) children.push(child);
+					});
+					formData.append('children', JSON.stringify(children));
+
+					if (designation_id === "7") {
+							const companySelect = document.getElementById("company");
+							if (!companySelect.value) {
+									Swal.fire({ icon: 'warning', title: '❌ Company Required', text: 'Please select a company.' });
+									btn.disabled = false;
+									return;
+							}
+							formData.append('company', companySelect.value);
+					}
+
+					$.ajax({
+							type: 'POST',
+							url: "{% url 'add_doctor_api' %}",
+							headers: { 'X-CSRFToken': getCookie('csrftoken') },
+							data: formData,
+							processData: false,
+							contentType: false,
+							success: function(response) {
+									Swal.fire('✅ Success', response.message, 'success').then(() => {
+											form.reset();
+											const newRow = $('#childrenTable tbody tr:first').clone();
+											newRow.find('input, select').val('');
+											$('#childrenTable tbody').html(newRow);
+											updateSerialNumbers();
+											window.location.href = "{% url 'doctor_list' %}";
+									});
+							},
+							error: function(xhr) {
+									let errorMsg = 'Something went wrong!';
+									if (xhr.responseJSON) {
+											errorMsg = JSON.stringify(xhr.responseJSON.errors || xhr.responseJSON, null, 2);
+									}
+									Swal.fire('❌ Error', errorMsg, 'error');
+									btn.disabled = false;
+							}
+					});
+			});
+		});
+</script>
+{% endblock content %}
+{% include './component/footer.html' %}

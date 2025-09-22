@@ -1,0 +1,581 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block content %}
+
+<main id="main" class="main">
+
+	<section class="section">
+		<div class="col-12">
+			<div class="card bg-light">
+
+				<!-- RM / Territory Dropdowns -->
+				<div class="row mb-1 px-1">
+					<div class="form-group col-md-6" id="rm-div" style="display:none;">
+						<label for="rm" class="form-label">Region (RM)</label>
+						<select id="rm" name="rm"
+						        class="form-control border border-secondary selectpicker"
+						        data-live-search="true" data-size="5"
+						        title="Select RM">
+						</select>
+					</div>
+
+					<div class="form-group col-md-6" id="territory-div" style="display:none;">
+						<label for="workarea" class="form-label">Territory Code</label>
+						<select id="workarea" name="workarea"
+						        class="form-control border border-secondary selectpicker"
+						        data-live-search="true" data-size="5"
+						        title="Select Territory Code">
+						</select>
+					</div>
+				</div>
+
+				<!-- Loading indicator -->
+				<div id="loadingIndicator" class="text-center my-4" style="display: none;">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+					<p class="mt-2">Loading doctors data...</p>
+				</div>
+
+				<!-- Container for dynamic tables -->
+				<div id="market_mappingGridContainer" class="card mt-2 p-3">
+					<div id="market_mappingGridInner"></div>
+				</div>
+				<!-- Edit Brand Modal -->
+				<!-- Modal HTML -->
+				<div class="modal fade" id="editBrandModal" tabindex="-1" aria-labelledby="editBrandModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered">
+						<div class="modal-content border border-secondary rounded">
+							<div class="modal-header">
+								<h5 class="modal-title" id="editBrandModalLabel">Edit Brand Info</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<form>
+									<input type="hidden" id="editBrandId"> <!-- Brand ID -->
+									<div class="mb-3">
+										<label for="editBrandDisplay" class="form-label">Brand</label>
+										<input type="text" id="editBrandDisplay" class="form-control" readonly>
+									</div>
+									<div class="mb-3">
+										<label for="editBrandClassSelect" class="form-label">Brand Class</label>
+										<select id="editBrandClassSelect" class="form-select">
+											<option value="">Select Class</option>
+										</select>
+									</div>
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+								<button type="button" id="updateBrandBtn" class="btn btn-primary">Update Brand</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</section>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+	// 🔹 Globals
+	const designation_id = String("{{ designation_id|default:'' }}");
+	let hierarchyData = [];
+	let currentTeam = null;   // areagroup from hierarchy
+	let latestDoctors = [];
+	let currentWorkArea = null;
+	const allowEdit = {{ allow_edit|yesno:"true,false"|default_if_none:"false" }};
+	console.log(allowEdit);
+	function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie("csrftoken");
+	// Utility to fill select with options
+	function fillSelect($sel, items, valueKey, labelFn) {
+		try { $sel.selectpicker('destroy'); } catch(e){}
+		$sel.empty();
+		items.forEach(it => {
+			const val = it[valueKey];
+			$sel.append(`<option value="${val}">${labelFn(it)}</option>`);
+		});
+		try { $sel.selectpicker(); } catch(e){}
+	}
+
+	// Fetch doctors by work area
+	function fetchDoctorsByWorkArea(workAreaCode) {
+		$('#loadingIndicator').show();
+		$('#market_mappingGridInner').hide().empty();
+
+		$.ajax({
+			url: `/api/marketmapping-by-workarea/?workareat=${encodeURIComponent(workAreaCode)}`,
+			method: 'GET',
+			success: function(data) {
+				$('#loadingIndicator').hide();
+				$('#market_mappingGridInner').show();
+				renderDoctorsGrid(data || []);   // safe default
+				latestDoctors = data || [];
+			},
+			error: function(xhr, status, error) {
+				$('#loadingIndicator').hide();
+				$('#market_mappingGridInner').show().html(`<div class="text-danger">Error loading doctors data. Please try again.</div>`);
+				console.error('Error fetching doctors:', error);
+			}
+		});
+	}
+
+	// Render doctor tables
+	function renderDoctorsGrid(doctors) {
+	const $container = $('#market_mappingGridInner');
+	$container.empty();
+
+	if (!doctors || !doctors.length) {
+		$container.html('<div class="text-muted">No doctors found for this territory.</div>');
+		return;
+	}
+
+	doctors.forEach(doctor => {
+		const basis = Array.isArray(doctor.productbasis) ? doctor.productbasis : [];
+		const tableId = `doctor-${doctor.drchildid}`;
+
+		let tableHtml = `
+			<div class="table-responsive">
+				<table class="table table-bordered border-dark rounded"
+							 id="${tableId}"
+							 data-drchildid="${doctor.drchildid}"
+							 data-doctor-class="${doctor.drclass}">
+					<thead style="font-size:12px!important;vertical-align: middle;">
+						<tr>
+							<th style="width:40px;">S.L.</th>
+							<th class="col-md-4">Doctor Information</th>
+							${basis.map(() => `<th class="gd-header">Brand | Class</th>`).join('')}
+
+							${allowEdit ? `
+							<th class="col-sm-1">Add Brand Class</th>
+								` : ''}
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td class="text-center">${doctor.drsl}</td>
+							<td style="font-size:12px">
+								<div><strong>Name:</strong> ${doctor.doctorname1} ${doctor.doctorname2 || ''}</div>
+								<div><strong>Speciality:</strong> ${doctor.specialitydescription}</div>
+								<div><strong>Class:</strong> ${doctor.drclass}</div>
+								<div><strong>Chamber ID:</strong> ${doctor.drchildid}</div>
+								<div><strong>Chamber:</strong> ${doctor.ch_addr1}</div>
+								<div><strong>PPPP ID:</strong> ${doctor.ppppid}</div>
+							</td>
+							${basis.map(brand => `
+							<td class="gd-cell" data-id="${brand.id}">
+								${brand.brandcodetext} | ${brand.brandclass}
+								${allowEdit ? `
+								<div class="d-flex gap-1 mt-2">
+									<i class="bi bi-pencil-square btn btn-warning btn-sm edit-brand" title="Edit"></i>
+									<i class="bi bi-clipboard-x btn btn-danger btn-sm delete-brand" title="Delete"></i>
+								</div>
+								` : ''}
+<!--                <div class="d-flex gap-1 mt-2">-->
+<!--                  <i class="bi bi-pencil-square btn btn-warning btn-sm edit-brand"></i>-->
+<!--                  <i class="bi bi-clipboard-x btn btn-danger btn-sm delete-brand"></i>-->
+<!--                </div>-->
+							</td>`).join('')}
+
+							${allowEdit ? `
+							<td>
+								<button class="btn btn-primary btn-sm mb-2 add-column"><i class="bi bi-clipboard-plus"></i></button>
+								</td>
+								` : ''}
+
+
+						</tr>
+					</tbody>
+				</table>
+			</div>`;
+		$container.append(tableHtml);
+	});
+}
+// --------------------------
+ // --------------- Open Modal & Populate Fields ---------------
+    $(document).on("click", ".edit-brand", function () {
+        const $td = $(this).closest("td");
+        const brandId = $td.data("id");
+        const $table = $td.closest("table");
+        const doctorClass = $table.data("doctor-class");
+
+        $("#editBrandId").val(brandId);
+
+        // Extract current brand and class from table cell
+        const currentBrandText = ($td.text() || "").split("|")[0].trim();
+        const currentClassText = ($td.text() || "").split("|")[1]?.trim();
+
+        // Set brand display (read-only)
+        $("#editBrandDisplay").val(currentBrandText);
+
+        // Populate BrandClass select
+        const $classSel = $("#editBrandClassSelect");
+        $.get(`/api/brandclass/?doctorclass=${encodeURIComponent(doctorClass)}`)
+            .done(function (classData) {
+                const options = (classData || []).map(c =>
+                    `<option value="${c.brandclassname}">${c.brandclassname}</option>`
+                ).join('');
+                $classSel.html('<option value="">Select Class</option>' + options);
+                $classSel.val(currentClassText);
+            })
+            .fail(() => $classSel.html('<option value="">Failed to load classes</option>'));
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('editBrandModal'));
+        modal.show();
+    });
+
+    // --------------- Update BrandClass AJAX ---------------
+    $(document).on("click", "#updateBrandBtn", function () {
+        const brandId = $("#editBrandId").val();
+        const newBrandClass = $("#editBrandClassSelect").val();
+
+        if (!newBrandClass) {
+            Swal.fire("Warning", "Please select a brand class.", "warning");
+            return;
+        }
+
+        const payload = { brandclass: newBrandClass };
+
+        $.ajax({
+            url: `/update_productbrand/${brandId}/`,
+            type: "PUT",
+            data: JSON.stringify(payload),
+            contentType: "application/json",
+            headers: { "X-CSRFToken": csrftoken },
+            success: function (res) {
+                const $td = $(`td[data-id='${brandId}']`);
+                const currentBrandText = $td.text().split("|")[0].trim();
+
+                $td.html(`
+                    ${currentBrandText} | ${res.brandclass}
+                    <div class="d-flex gap-1 mt-2">
+                        <i class="bi bi-pencil-square btn btn-warning btn-sm edit-brand" title="Edit"></i>
+                        <i class="bi bi-clipboard-x btn btn-danger btn-sm delete-brand" title="Delete"></i>
+                    </div>
+                `);
+
+                // Close modal
+                const modalEl = document.getElementById('editBrandModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
+                Swal.fire("Updated!", res.message || "Brand class updated successfully.", "success");
+            },
+            error: function (xhr) {
+                Swal.fire("Error!", "Failed to update brand class: " + xhr.responseText, "error");
+            }
+        });
+    });
+
+
+// 🔹 Handle Add Column button
+$(document).on('click', '.add-column', function () {
+	const $table = $(this).closest('table');
+	const $row   = $table.find('tbody tr').first();
+
+	// Unique ID for this new column
+	const colId = `col-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+	// Add header with static label
+	$table.find('thead tr th:last')
+				.before(`<th class="gd-header" data-col-id="${colId}">Brand | Class</th>`);
+
+	// Add cell
+	const $newTd = $(`
+		<td class="gd-cell" data-col-id="${colId}">
+			<div class="d-flex flex-column">
+				<select class="form-select form-select-sm brand-select">
+					<option value="">Select Brand</option>
+				</select>
+				<select class="form-select form-select-sm brandclass-select mt-1">
+					<option value="">Select Class</option>
+				</select>
+				<div class="d-flex gap-1 mt-2">
+					<i class="bi bi-floppy btn btn-sm btn-primary save-brand-info" title="Save"></i>
+					<i class="bi bi-clipboard-x btn btn-danger btn-sm delete-brand" title="Delete Column"></i>
+				</div>
+			</div>
+		</td>
+	`);
+	$row.find('td:last').before($newTd);
+
+	// Populate dropdowns from APIs
+	populateNewBrandCellFromAPIs($table, $newTd);
+});
+
+// Delete existing Brand and remove column
+$(document).on("click", ".delete-brand", function () {
+		const $td = $(this).closest("td.gd-cell");
+		const brandId = $td.data("id");
+
+		if (!brandId) return;
+
+		// Get the index of this cell
+		const cellIndex = $td.index();
+		const $table = $td.closest("table");
+
+		// Show SweetAlert confirmation
+		Swal.fire({
+				title: 'Are you sure?',
+				text: "This will permanently delete the brand!",
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonText: 'Yes, delete it!',
+				cancelButtonText: 'Cancel',
+				reverseButtons: true
+		}).then((result) => {
+				if (result.isConfirmed) {
+						// Proceed with AJAX deletion
+						$.ajax({
+								url: `/api/delete_productbrand/${brandId}/`,
+								type: 'DELETE',
+								headers: { "X-CSRFToken": csrftoken },
+								success: function () {
+										// Remove header at same index
+										$table.find("thead tr th").eq(cellIndex).remove();
+
+										// Remove all cells at that index in all rows
+										$table.find("tbody tr").each(function () {
+												$(this).find("td").eq(cellIndex).remove();
+										});
+
+										Swal.fire(
+												'Deleted!',
+												'The brand has been deleted.',
+												'success'
+										);
+								},
+								error: function (xhr) {
+										Swal.fire(
+												'Error!',
+												'Failed to delete the brand: ' + xhr.responseText,
+												'error'
+										);
+								}
+						});
+				}
+		});
+});
+
+$(document).on("click", ".save-brand-info", function () {
+		const $td = $(this).closest("td");
+		const $table = $td.closest("table");
+
+		const drchildid = $table.data("drchildid");
+		const workareat = currentWorkArea;
+
+		const $brandOption = $td.find("select.brand-select option:selected");
+		const brandcodetext = $brandOption.val();
+		const fullbrandcode = $brandOption.data("fullbrandcode");
+		const brandclass = $td.find("select.brandclass-select").val();
+		// ✅ Validation
+		if (!brandcodetext) {
+				Swal.fire({
+						icon: 'warning',
+						title: 'Brand not selected',
+						text: 'Please select a brand before saving.',
+						confirmButtonText: 'OK'
+				});
+				return; // stop here
+		}
+		if (!brandclass) {
+				Swal.fire({
+						icon: 'warning',
+						title: 'Brand Class not selected',
+						text: 'Please select a brand class before saving.',
+						confirmButtonText: 'OK'
+				});
+				return; // stop here
+		}
+		const payload = {
+				drchildid,
+				workareat,
+				fullbrandcode,
+				brandcodetext,
+				brandclass
+		};
+
+		const $saveBtn = $(this);
+		$saveBtn.prop("disabled", true).text("Saving...");
+		console.log(payload);
+		$.ajax({
+				url: "/api/newproductbrandadd/",
+				type: "POST",
+				data: JSON.stringify(payload),
+				contentType: "application/json",
+				headers: { "X-CSRFToken": csrftoken },
+				success: function (res) {
+						$td.addClass("gd-cell").attr("data-id", res.id).html(`
+								${brandcodetext} | ${brandclass}
+								<div class="d-flex gap-1 mt-2">
+										<i class="bi bi-pencil-square btn btn-warning btn-sm edit-brand" title="Edit"></i>
+										<i class="bi bi-clipboard-x btn btn-danger btn-sm delete-brand" title="Delete"></i>
+								</div>
+						`);
+						console.log("✅ Saved:", res);
+				},
+				error: function (xhr) {
+						console.error("❌ Save failed:", xhr.responseText);
+						alert("Save failed: " + xhr.responseText);
+						$saveBtn.prop("disabled", false);
+				}
+		});
+});
+
+// 🔹 Delete brand column
+$(document).on("click", ".delete-brand", function () {
+	const $td = $(this).closest("td");
+	const colId = $td.data("col-id");
+	const $table = $td.closest("table");
+
+	if (!colId) return;
+
+	// Remove matching header
+	$table.find(`thead tr th[data-col-id="${colId}"]`).remove();
+
+	// Remove all <td> with the same col-id
+	$table.find(`tbody tr td[data-col-id="${colId}"]`).remove();
+});
+
+// 🔹 Populate new column selects from APIs
+function populateNewBrandCellFromAPIs($table, $td) {
+	if (!currentTeam) {
+		console.warn('No territory/team selected yet.');
+		return;
+	}
+
+	const doctorClass = $table.data('doctor-class') || '';
+	const drchildid   = $table.data('drchildid');   // we need this for duplicate check
+	const workareat   = currentWorkArea;            // already in your context
+	const $brandSel   = $td.find('select.brand-select');
+	const $classSel   = $td.find('select.brandclass-select');
+
+	// 🔹 Step 1: Get list of brands already used by this doctor in this work area
+	$.get(`/api/current_brand/?drchildid=${encodeURIComponent(drchildid)}&workareat=${encodeURIComponent(workareat)}`)
+		.done(function (existingBrands) {
+			const usedCodes = (existingBrands || []).map(b => b.fullbrandcode);
+
+			// 🔹 Step 2: Fetch product brands by team
+			$.get(`/api/new_productbrand/?team=${encodeURIComponent(currentTeam)}`)
+				.done(function (brandData) {
+					const options = (brandData || []).map(b => {
+						const isUsed = usedCodes.includes(b.fullbrandcode);
+						const disabledAttr = isUsed ? 'disabled class="used-brand"' : '';
+						return `<option value="${b.brandcodetext}" data-fullbrandcode="${b.fullbrandcode}" ${disabledAttr}>
+											${b.brandcodetext} (${b.brandname})${isUsed ? ' [Already Added]' : ''}
+										</option>`;
+					}).join('');
+
+					$brandSel.html('<option value="">Select Brand</option>' + options);
+				})
+				.fail(() => {
+					$brandSel.html('<option value="">Failed to load brands</option>');
+				});
+		})
+		.fail(() => {
+			console.warn('Could not fetch current brands for duplicate check, loading all normally.');
+			$.get(`/api/new_productbrand/?team=${encodeURIComponent(currentTeam)}`)
+				.done(function (brandData) {
+					const options = (brandData || []).map(b =>
+						`<option value="${b.brandcodetext}" data-fullbrandcode="${b.fullbrandcode}">
+							 ${b.brandcodetext} (${b.brandname})
+						 </option>`
+					).join('');
+					$brandSel.html('<option value="">Select Brand</option>' + options);
+				})
+				.fail(() => {
+					$brandSel.html('<option value="">Failed to load brands</option>');
+				});
+		});
+
+	// 🔹 Step 3: Fetch brand classes by doctor class (unchanged)
+	if (doctorClass) {
+		$.get(`/api/brandclass/?doctorclass=${encodeURIComponent(doctorClass)}`)
+			.done(function (classData) {
+				const options = (classData || []).map(c =>
+					`<option value="${c.brandclassname}">${c.brandclassname}</option>`
+				).join('');
+				$classSel.html('<option value="">Select Class</option>' + options);
+			})
+			.fail(() => {
+				$classSel.html('<option value="">Failed to load classes</option>');
+			});
+	}
+}
+
+
+	// 🔹 Load hierarchy
+	$(document).ready(function () {
+		$.get("/api/hierarchy/", function (data) {
+			hierarchyData = data || [];
+
+			if (designation_id === "2" || designation_id === "7") {
+				$("#territory-div").show();
+				fillSelect($("#workarea"), hierarchyData, "sapareacode", it => `${it.sapareacode} - ${it.areaname}`);
+
+				$("#workarea").off("changed.bs.select").on("changed.bs.select", function() {
+					const selectedTerritory = $(this).val();
+					currentWorkArea = selectedTerritory;
+					if (selectedTerritory) fetchDoctorsByWorkArea(selectedTerritory);
+
+					const selectedObj = hierarchyData.find(it => it.sapareacode === selectedTerritory);
+					if (selectedObj) {
+						console.log("Workareat:", selectedObj.sapareacode);
+						console.log("Team:", selectedObj.areagroup);
+						currentTeam = selectedObj.areagroup;
+					}
+				});
+			}
+
+			if (designation_id === "3") {
+				$("#rm-div, #territory-div").show();
+				const seen = new Set();
+				const regions = [];
+				hierarchyData.forEach(it => {
+					if (!seen.has(it.sapregioncode)) {
+						seen.add(it.sapregioncode);
+						regions.push({sapregioncode: it.sapregioncode, regionname: it.regionname});
+					}
+				});
+
+				fillSelect($("#rm"), regions, "sapregioncode", it => `${it.sapregioncode} - ${it.regionname}`);
+
+				$("#rm").off("changed.bs.select").on("changed.bs.select", function () {
+					const selectedRegion = $(this).val();
+					const terrs = hierarchyData.filter(it => it.sapregioncode === selectedRegion);
+					fillSelect($("#workarea"), terrs, "sapareacode", it => `${it.sapareacode} - ${it.areaname}`);
+					$('#market_mappingGridInner').empty();
+				});
+
+				$("#workarea").off("changed.bs.select").on("changed.bs.select", function() {
+					const selectedTerritory = $(this).val();
+					if (selectedTerritory) fetchDoctorsByWorkArea(selectedTerritory);
+				});
+			}
+		}).fail(function(xhr) {
+			console.error("Hierarchy load failed:", xhr.responseText || xhr.status);
+		});
+	});
+</script>
+
+{% endblock %}
+{% include './component/footer.html' %}

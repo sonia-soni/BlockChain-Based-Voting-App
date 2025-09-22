@@ -1,0 +1,375 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block content %}
+
+<main id="main" class="main">
+	<section class="section">
+		<div class="col-12">
+			<div class="card bg-light">
+				<h2 class="text-center p-2 m-2">Doctors List</h2>
+
+				<!-- Filters -->
+				<div class="row mb-3 px-2">
+					<div class="d-flex flex-wrap gap-3 align-items-end">
+						<!-- Speciality -->
+						<div class="form-group">
+							<label for="speciality" class="form-label">Speciality</label>
+							<select name="speciality" id="speciality" class="form-control border border-secondary selectpicker"
+							        data-live-search="true" data-size="5">
+								<option value="" selected>Select Speciality</option>
+								{% for speciality in specialities %}
+								<option value="{{ speciality.specialitydescription }}">{{ speciality.specialitydescription }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div class="form-group">
+							<label for="doctorfullname" class="form-label">Doctor Full Name</label>
+							<input type="text" class="form-control border border-secondary" name="doctorfullname" id="doctorfullname">
+						</div>
+						<!-- District -->
+						<div class="form-group">
+							<label for="district" class="form-label">District</label>
+							<select name="district" id="district" class="form-control border border-secondary selectpicker"
+							        data-live-search="true" data-size="5">
+								<option value="" selected>Select District</option>
+								{% for district in districts %}
+								<option value="{{ district.DistrictName }}">{{ district.DistrictName }}</option>
+								{% endfor %}
+							</select>
+						</div>
+
+						<!-- 4P ID -->
+						<div class="form-group">
+							<label for="ppppid" class="form-label">4P ID</label>
+							<input type="text" class="form-control border border-secondary" name="ppppid" id="ppppid">
+						</div>
+
+						<!-- BMDC Reg. No -->
+						<div class="form-group">
+							<label for="bmdcregno" class="form-label">BMDC Reg. No.</label>
+							<input type="text" class="form-control border border-secondary" name="bmdcregno" id="bmdcregno">
+						</div>
+
+						<!-- Button -->
+						<div class="form-group">
+							<button id="fetchDoctorsBtn" class="btn btn-primary">Get Doctors</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Loading Spinner -->
+				<div id="loadingIndicator" class="text-center my-3" style="display: none;">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+					<p class="mt-2">Loading doctors data...</p>
+				</div>
+
+				<!-- Doctors Table -->
+				<div class="card mt-2 p-3 table-responsive">
+					<table id="doctors_bankTable" class="table table-striped table-bordered table-hover">
+						<thead class="text-center">
+						<tr>
+							<th class="text-center">Doctor ID</th>
+							<th class="text-center">Doctor Name</th>
+							<th class="text-center">Degree</th>
+							<th class="text-center">Speciality</th>
+							<th class="text-center">Address</th>
+							<th class="text-center">Action</th>
+						</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+
+			</div>
+		</div>
+	</section>
+</main>
+
+<!-- Pick Doctor Modal -->
+<div class="modal fade" id="pickDoctorModal" tabindex="-1" aria-labelledby="pickDoctorModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-lg">
+		<div class="modal-content border border-secondary rounded">
+			<div class="modal-header">
+				<h5 class="modal-title" id="pickDoctorModalLabel">Pick Doctor in Territory</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			</div>
+			<div class="modal-body">
+				<form id="pickDoctorForm">
+					<input type="hidden" id="selectedDoctorId">
+
+					<!-- RM Dropdown -->
+					<div class="form-group mb-3" id="rm-div" style="display: none;">
+						<label for="rm" class="form-label">Region</label>
+						<select id="rm" class="form-control selectpicker" data-live-search="true"></select>
+					</div>
+
+					<!-- Territory Dropdown -->
+					<div class="form-group mb-3" id="territory-div">
+						<label for="workarea" class="form-label">Work Area / Territory</label>
+						<select id="workarea" class="form-control selectpicker" data-live-search="true"></select>
+					</div>
+
+					<div class="form-group">
+						<label for="drclass" class="form-label">Doctor Class</label>
+						<select name="drclass" id="drclass" class="form-control border border-secondary selectpicker" data-live-search="true" data-size="5">
+							<option value="" selected>Select Doctor Class</option>
+							{% for brandclass in brandclasses %}
+							<option value="{{ brandclass.doctorclass }}">{{ brandclass.doctorclass }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="form-group mb-3">
+						<label for="drsl" class="form-label">Doctor Serial</label>
+						<input type="text" id="drsl" name="drsl" class="form-control border border-secondary">
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="new_chamber_add">Save</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+			function getCookie(name) {
+					let cookieValue = null;
+					if (document.cookie && document.cookie !== "") {
+							const cookies = document.cookie.split(";");
+							for (let i = 0; i < cookies.length; i++) {
+									const cookie = cookies[i].trim();
+									if (cookie.startsWith(name + "=")) {
+											cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+											break;
+									}
+							}
+					}
+					return cookieValue;
+			}
+			const csrftoken = getCookie("csrftoken");
+			const designation_id = "{{ designation_id|default:'' }}";
+			const workarea = "{{ workarea|default:'' }}";
+			const allowEdit = {{ allow_edit|yesno:"true,false"|default_if_none:"false" }};
+
+			let hierarchyData = [];
+			let currentTeam = null;
+			let currentWorkArea = workarea || null;
+
+			<!--        console.log("designation_id:", designation_id);-->
+			<!--        console.log("workarea:", workarea);-->
+			<!--        console.log("allowEdit:", allowEdit);-->
+
+					// Initialize DataTable
+			const table = $("#doctors_bankTable").DataTable({
+					dom: 'Bfrtip',
+					buttons: ['pageLength'],
+					responsive: true,
+					lengthMenu: [
+							[10, 25, 50, 100],
+							['10 rows', '25 rows', '50 rows', '100 rows']
+							],
+					columns: [
+							{ data: 'doctorId', width: "120px" },
+							{ data: 'doctorName' },
+							{ data: 'degree', orderable: false, searchable: false },
+							{ data: 'speciality', orderable: false, searchable: false, width: "75px" },
+							{ data: 'address', orderable: false, searchable: false, width: "280px" },
+							{ data: 'action', orderable: false, searchable: false, width: "35px" }
+							],
+					data: [],
+					language: { emptyTable: "No doctors found. Please use the filters above." }
+			});
+
+			const $loading = $("#loadingIndicator");
+
+			function fetchDoctors() {
+					const filters = {};
+					if ($("#speciality").val()) filters.speciality = $("#speciality").val();
+					if ($("#doctorfullname").val()) filters.doctorfullname = $("#doctorfullname").val();
+					if ($("#district").val()) filters.district = $("#district").val();
+					if ($("#ppppid").val()) filters.ppppid = $("#ppppid").val();
+					if ($("#bmdcregno").val()) filters.bmdcregno = $("#bmdcregno").val();
+
+					$loading.show();
+					table.clear().draw();
+
+					$.ajax({
+							url: "/api/doctor_data_bank/",
+							method: "GET",
+							data: filters,
+							success: function (res) {
+									$loading.hide();
+									if (!res.results || res.results.length === 0) return;
+
+									const data = res.results.map(doctor => ({
+											doctorId: `<p><b>Master ID:</b> ${doctor.drmasterid || '-'}</p><p><b>Chamber ID:</b> ${doctor.drchildid}</p>`,
+											doctorName: `${doctor.doctorname1 || ""} ${doctor.doctorname2 || ""}`.trim(),
+											degree: doctor.professionaldegrees || "",
+											speciality: doctor.specialitydescription || "",
+											address: `${doctor.ch_addr1 || ""} ${doctor.ch_addr2 || ""}`.trim(),
+											action: `
+											<div class="dropdown">
+											<button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+											<i class="ri-settings-3-line fs-6"></i>
+											</button>
+											<ul class="dropdown-menu">
+											<li><button class="dropdown-item view-doctor" data-id="${doctor.drchildid}">
+											<i class="ri-eye-line me-2"></i>Details
+											</button></li>
+											<li><button class="dropdown-item addchamber" data-id="${doctor.drchildid}">
+											<i class="ri-add-line me-2"></i>Add New Chamber
+											</button></li>
+											${allowEdit ? `
+											<li><a class="dropdown-item pick-doctor" href="#" data-id="${doctor.drchildid}" data-masterid="${doctor.drmasterid}">
+											<i class="ri-edit-line me-2"></i>Pick In Territory
+											</a></li>` : ''}
+											</ul>
+											</div>`
+									}));
+
+									table.rows.add(data).draw();
+							},
+							error: function (err) {
+									$loading.hide();
+									console.error("Error fetching doctors:", err);
+							}
+					});
+			}
+
+			$("#fetchDoctorsBtn").on("click", fetchDoctors);
+
+					// Fill select helper function
+			function fillSelect($select, items, valueKey, textFn) {
+					$select.empty();
+					$select.append('<option value="">Select</option>');
+					items.forEach(item => {
+							$select.append(`<option value="${item[valueKey]}">${textFn(item)}</option>`);
+					});
+					if ($select.hasClass('selectpicker')) $select.selectpicker('refresh');
+			}
+
+					// Pick Doctor Modal handler
+			$(document).on("click", ".pick-doctor", function (e) {
+					e.preventDefault();
+									const drchildid = $(this).data("id"); // already there
+	const drmasterid = $(this).data("masterid"); // add this attribute in your table button
+
+	$("#selectedDoctorId").val(drchildid);
+	$("#pickDoctorModal").data("drmasterid", drmasterid); // store in modal data
+	$("#pickDoctorModal").modal("show");
+
+									// Decide API URL
+	let hierarchyUrl = "/api/hierarchy/";
+	if (designation_id === "2" && workarea) {
+			hierarchyUrl = `/api/hierarchy/?workarea=${workarea}`;
+	}
+
+	$.get(hierarchyUrl, function (data) {
+			hierarchyData = data || [];
+
+			if (designation_id === "2" || designation_id === "7") {
+					$("#territory-div").show();
+					$("#rm-div").hide();
+					fillSelect($("#workarea"), hierarchyData, "sapareacode", it => `${it.sapareacode} - ${it.areaname}`);
+			}
+
+			if (designation_id === "3") {
+					$("#rm-div, #territory-div").show();
+					const seen = new Set();
+					const regions = [];
+					hierarchyData.forEach(it => {
+							if (!seen.has(it.sapregioncode)) {
+									seen.add(it.sapregioncode);
+									regions.push({ sapregioncode: it.sapregioncode, regionname: it.regionname });
+							}
+					});
+					fillSelect($("#rm"), regions, "sapregioncode", it => `${it.sapregioncode} - ${it.regionname}`);
+
+																	// RM change → populate territories
+					$("#rm").off("changed.bs.select").on("changed.bs.select", function () {
+							const selectedRegion = $(this).val();
+							const terrs = hierarchyData.filter(it => it.sapregioncode === selectedRegion);
+							fillSelect($("#workarea"), terrs, "sapareacode", it => `${it.sapareacode} - ${it.areaname}`);
+					});
+			}
+
+	}).fail(function (xhr) {
+			console.error("Hierarchy load failed:", xhr.responseText || xhr.status);
+	});
+
+});
+			<!--        $('#new_chamber_add').on('click', function (e) {-->
+					<!--    e.preventDefault();-->
+
+					<!--    const drchildid = $('#selectedDoctorId').val();-->
+					<!--    const drmasterid = $('#pickDoctorModal').data('drmasterid');-->
+					<!--    const drsl = $('#drsl').val();-->
+					<!--    const workareat = $('#workarea').val();-->
+					<!--    const drclass = $('#drclass').val();-->
+
+
+
+
+					<!--});-->
+			$('#new_chamber_add').on('click', function (e) {
+	e.preventDefault();
+
+	const drchildid = $('#selectedDoctorId').val();
+	const drmasterid = $('#pickDoctorModal').data('drmasterid');
+	const drsl = $('#drsl').val();
+	const workareat = $('#workarea').val();
+	const drclass = $('#drclass').val();
+
+	// Debug log
+	console.log({ drmasterid, drchildid, drsl, workareat, drclass });
+
+	if (!drchildid || !workareat || !drclass || !drsl) {
+			Swal.fire({ icon: 'warning', title: 'Incomplete Data', text: 'Please fill all required fields.' });
+			return;
+	}
+
+	const postData = {
+			drchildid: drchildid,
+			workareat: workareat,
+			drclass: drclass,
+			drsl: parseInt(drsl)
+	};
+
+	$.ajax({
+			url: '/api/add_new_chembar_territory/' ,
+			type: "POST",
+			data: JSON.stringify(postData),          // Convert object to JSON string
+			contentType: "application/json",         // Tell Django it's JSON
+			headers: { "X-CSRFToken": "{{ csrf_token }}" },
+			beforeSend: function () {
+					$('#new_chamber_add').prop('disabled', true).text('Saving...');
+			},
+			success: function (res) {
+					Swal.fire({ icon: 'success', title: 'Added!', text: res.message || 'Success' });
+					$('#pickDoctorForm')[0].reset();
+					$('#pickDoctorModal').modal('hide');
+			},
+			error: function (xhr) {
+					let msg = "Something went wrong!";
+					if (xhr.responseJSON) {
+							msg = xhr.responseJSON.message || JSON.stringify(xhr.responseJSON);
+					}
+					Swal.fire({ icon: 'error', title: 'Error', text: msg });
+			},
+			complete: function () {
+					$('#new_chamber_add').prop('disabled', false).text('Save');
+			}
+	});
+});
+
+
+	});
+</script>
+
+{% endblock %}
+{% include './component/footer.html' %}
